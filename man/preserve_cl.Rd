@@ -11,7 +11,9 @@ preserve_cl(cl, cl_phi, k1, k2)
 
 \item{cl_phi}{clustering of x'(phi)}
 
-\item{k1, k2}{index of clusters involved in the test}
+\item{k1}{index of clusters involved in the test}
+
+\item{k2}{index of clusters involved in the test}
 }
 \value{
 Returns TRUE if Ck, Ck' in C(x'(phi)), and FALSE otherwise
