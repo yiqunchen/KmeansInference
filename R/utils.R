@@ -16,7 +16,7 @@ norm_vec <- function(x) {
 #'
 #' @keywords internal
 #'
-#' @param x input to check 
+#' @param x input to check
 #' @param a lower
 #' @param b upper
 #'
@@ -34,7 +34,7 @@ is_integer_between_a_b <- function(x, a, b) {
 #' @param cl2 the second clustering
 #' @param K the number of clusters
 #'
-#' @return Returns TRUE if they are the same, and FALSE otherwise 
+#' @return Returns TRUE if they are the same, and FALSE otherwise
 same_cl <- function(cl1, cl2, K) {
   tab <- table(cl1, cl2)
   same_up_to_perm <- sum(tab != 0) == K
@@ -47,21 +47,31 @@ same_cl <- function(cl1, cl2, K) {
 #'
 #' @param cl clustering of x
 #' @param cl_phi clustering of x'(phi)
-#' @param k1 index of clusters involved in the test 
-#' @param k2 index of clusters involved in the test 
+#' @param k1 index of clusters involved in the test
+#' @param k2 index of clusters involved in the test
 #'
-#' @return Returns TRUE if Ck, Ck' in C(x'(phi)), and FALSE otherwise 
+#' @return Returns TRUE if Ck, Ck' in C(x'(phi)), and FALSE otherwise
 preserve_cl <- function(cl, cl_phi, k1, k2) {
   tab <- table(cl, cl_phi)
-  
+
   k1_in <- (sum(tab[k1, ] != 0) == 1) & (sum(tab[, k1] != 0) == 1)
   k2_in <- (sum(tab[k2, ] != 0) == 1) & (sum(tab[, k2] != 0) == 1)
 
   return(k1_in & k2_in)
 }
 
-
-
+#' @export
+multivariate_Z_test <- function(X, cluster_vec, k1, k2, sig) {
+  q <- ncol(X)
+  diff_means <- colMeans(X[cluster_vec == k1, , drop=F]) - colMeans(X[cluster_vec == k2, , drop=F])
+  stat <- norm_vec(diff_means)
+  n1 <- sum(cluster_vec == k1)
+  n2 <- sum(cluster_vec == k2)
+  squared_norm_nu <- 1/n1 + 1/n2
+  scale_factor <- squared_norm_nu*sig^2
+  pval <- 1 - pchisq(stat^2/scale_factor, df=q)
+  return(list(stat=stat, pval=pval))
+}
 
 
 

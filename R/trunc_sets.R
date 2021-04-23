@@ -178,7 +178,7 @@ solve_one_ineq_complement <- function(A, B, C, tol=1e-10) {
 }
 
 
-### Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----
+#' Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----
 #' @keywords internal
 #'
 #' @param X, matrix n by p
@@ -205,7 +205,7 @@ inner_product_phi <- function(X, v, i, j){
 }
 
 
-### Represent ||x'(phi)_i-x'(phi)_j||_2^2 as a quadratic function in phi ----
+#' Represent ||x'(phi)_i-x'(phi)_j||_2^2 as a quadratic function in phi ----
 #' @keywords internal
 #'
 #' @param X, matrix n by p
@@ -232,7 +232,7 @@ norm_sq_phi <- function(X, v, i,j){
 
 
 
-### Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----
+#' Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----
 #' @keywords internal
 #'
 #' @param X, matrix n by p
@@ -254,7 +254,7 @@ norm_phi_canonical_kmeans <- function(X, cl, k, v, i){
   dir_XTv <- XTv/norm_vec(XTv)
   # compute quad coef
   v_i_expression <- (v[i]-sum(indicator_vec*v)/n_k)/(v_norm^2)
-  x_i_expression <- X[i,] - colMeans(X[indicator_location,])
+  x_i_expression <- X[i,] - colMeans(X[indicator_location,,drop=FALSE])
   quad_coef <- (v_i_expression)^2
   # compute lienar coef
   linear_coef_part_1 <- v_i_expression*(x_i_expression%*%dir_XTv)
@@ -269,7 +269,8 @@ norm_phi_canonical_kmeans <- function(X, cl, k, v, i){
   return(coef_list)
 }
 
-
+#' Implement the minus operation for two quadratic inequalities
+#'
 combine_quad_ineq <- function(quad1, quad2){
   coef_list <- list("quad" = quad1$quad-quad2$quad, "linear" = quad1$linear-quad2$linear,
                     "constant"= quad1$constant-quad2$constant)
