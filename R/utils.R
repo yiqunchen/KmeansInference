@@ -63,13 +63,15 @@ preserve_cl <- function(cl, cl_phi, k1, k2) {
 #' @export
 multivariate_Z_test <- function(X, cluster_vec, k1, k2, sig) {
   q <- ncol(X)
-  diff_means <- colMeans(X[cluster_vec == k1, , drop=F]) - colMeans(X[cluster_vec == k2, , drop=F])
+  diff_means <- colMeans(X[cluster_vec == k1, , drop=F]) -
+    colMeans(X[cluster_vec == k2, , drop=F])
   stat <- norm_vec(diff_means)
   n1 <- sum(cluster_vec == k1)
   n2 <- sum(cluster_vec == k2)
   squared_norm_nu <- 1/n1 + 1/n2
   scale_factor <- squared_norm_nu*sig^2
-  pval <- 1 - pchisq(stat^2/scale_factor, df=q)
+  accurate_pchi <- pchisq(stat^2/scale_factor, df=q, log.p = TRUE,lower.tail=FALSE)
+  pval <- exp(accurate_pchi) #1 - pchisq(stat^2/scale_factor, df=q)
   return(list(stat=stat, pval=pval))
 }
 

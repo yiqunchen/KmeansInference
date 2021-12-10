@@ -10,7 +10,7 @@ kmeans_estimation(
   iter.max = 10,
   nstart = 1,
   seed = 1234,
-  tol_eps = 1e-06,
+  tol_eps = 0.01,
   verbose = TRUE
 )
 }
