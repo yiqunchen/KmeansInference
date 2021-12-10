@@ -2,3 +2,14 @@
 .Rhistory
 .RData
 .Ruserdata
+src/*.o
+src/*.so
+src/*.dll
+inst/doc
+.DS_Store
+doc
+Meta.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+R/.DS_Store
