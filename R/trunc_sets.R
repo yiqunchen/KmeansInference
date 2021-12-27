@@ -376,7 +376,7 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
   # final intervals look correct -- try to find truncation?
   final_interval_complement <- do.call('c', all_interval_lists)
   final_interval_complement <- matrix(final_interval_complement, ncol=2, byrow=T)
-  final_interval_complement <- intervals::reduce(intervals::Intervals(final_interval_complement),
+  final_interval_complement <- intervals::reduce(intervals::Intervals_full(final_interval_complement),
                                                      check_valid=FALSE)
 
   final_interval_chisq <- intervals::interval_complement(final_interval_complement)
