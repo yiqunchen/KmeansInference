@@ -23,9 +23,12 @@ In particular, the inferential challenges resulting from testing data-guided hyp
 
 In this work, we propose a test for a difference in means between two clusters estimated from applying **k-means clustering**. Given a set of observations, suppose that we first apply apply the k-means clustering to obtain clusters. We might then consider testing the null hypothesis that the mean is the same across two *estimated clusters*. As an example, consider a simulated data set where $x_1,\ldots,x_{150} \sim \mathcal{N}(\textbf{0}_{2},\textbf{I}_{2})$, and applying the k-means clustering with K=3 yields three clusters (see leftmost panel of Figure 1). In the middle panel, we display the quantiles of the Wald p-value for testing the null hypothesis that a randomly chosen pair of *estimated clusters* have the same mean. Because the Wald p-value does not account for the fact that the cluster labels are obtained through the same data used for testing, the test based on it leads to an extremely inflated Type I error. By contrast, our selective p-value, conditional on the event that k-means clustering yields the two estimated clusters under investigation, leads to a correctly-sized test (see the rightmost panel of Figure 1). More detailed simulation results can be found in Section 2 of our manuscript.
 
-![](./man/figures/figure_1_a.png)
-![](./man/figures/figure_1_b.png)
-![](./man/figures/figure_1_c.png)
+<div>
+<figure>
+<img src="man/figures/figure_1_a.png" alt="Illustrative example" width="30%" class="center">
+<img src="man/figures/figure_1_b.png" alt="1b" width="30%" class="center" alt>
+<img src="man/figures/figure_1_c.png" alt="1c" width="30%" class="center">
+</figure>
 
 <!-- [Figure 1: (a): The piecewise mean structure of $\beta$ according to a two-dimensional grid graph. (b): Under the null hypothesis, both $p_{\text{Hyun}}$ and $p_{C_1,C_2}$ control the selective Type I error, but the z-test $p_{\text{Naive}} = \mathbb{P}(|\nu^\top Y|\geq |\nu^\top y|)$ leads to inflated selective Type I error. (c): For a given value of the effect size ($|\nu^\top\beta|/\sigma$), $p_{C_1,C_2}$ has higher power than $p_{\text{Hyun}}$. Power for both increases as a function of the effect size.] -->
 
