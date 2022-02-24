@@ -4,19 +4,26 @@
 \alias{norm_sq_phi}
 \title{Represent ||x'(phi)_i-x'(phi)_j||_2^2 as a quadratic function in phi ----}
 \usage{
-norm_sq_phi(X, v, i, j)
+norm_sq_phi(X, v, XTv, XTv_norm, dir_XTv, v_norm, i, j)
 }
 \arguments{
-\item{X, }{matrix n by p}
+\item{v, }{the vector}
 
-\item{v, }{contrast vector n by 1}
+\item{XTv, }{vector p by 1}
+
+\item{XTv_norm, }{norm of XTv}
+
+\item{dir_XTv, }{vector p by 1 := XTv/XTv_norm}
+
+\item{v_norm, }{2-norm of vector v}
 
 \item{i, }{first index}
 
 \item{j, }{second index}
 }
 \value{
-parameters: a, b, c the coefficients of the quadratic equation such that (ax^2 + bx + c <= 0)
+parameters: a, b, c the coefficients of the quadratic equation
+such that (ax^2 + bx + c <= 0)
 }
 \description{
 Represent ||x'(phi)_i-x'(phi)_j||_2^2 as a quadratic function in phi ----

@@ -58,7 +58,6 @@ kmeans_estimation <- function(X, k, iter.max = 10, nstart = 1, seed = 1234,
 }
 
 
-
 #' k means inference
 #' @export
 kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,

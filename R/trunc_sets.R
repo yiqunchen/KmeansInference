@@ -385,14 +385,12 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
   return(final_interval_chisq)
 }
 
-
-
 #' Compute set S for isotropic case
 #' @export
 kmeans_compute_S_genCov <- function(X, estimated_k_means, all_T_clusters,
                                     all_T_centroids,
                                  n, XTv, XTv_norm,
-                                 dir_XTv, v_vec,v_norm,T_length,
+                                 dir_XTv, v_vec,v_norm, T_length,
                                  Sig_XTv_norm, k){
 
   Sig_Inv_factor <- XTv_norm/Sig_XTv_norm

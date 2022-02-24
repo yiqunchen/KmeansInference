@@ -4,10 +4,27 @@
 \alias{norm_phi_canonical_kmeans}
 \title{Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----}
 \usage{
-norm_phi_canonical_kmeans(X, cl, k, v, i)
+norm_phi_canonical_kmeans(
+  X,
+  last_centroids,
+  XTv,
+  XTv_norm,
+  dir_XTv,
+  v_norm,
+  cl,
+  k,
+  v,
+  i
+)
 }
 \arguments{
-\item{X, }{matrix n by p}
+\item{XTv, }{vector p by 1}
+
+\item{XTv_norm, }{norm of XTv}
+
+\item{dir_XTv, }{vector p by 1 := XTv/XTv_norm}
+
+\item{v_norm, }{2-norm of vector v}
 
 \item{cl, }{factor vector n by 1 (most recent cluster assignment)}
 

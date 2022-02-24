@@ -5,10 +5,10 @@ Version: 0.1.0
 Author: Yiqun Chen
 Authors@R: c(person("Yiqun", "Chen", email = "yiqunc@uw.edu",
                   role = c("aut", "cre")))
-Description: An implementation of the selective inference test for a difference in means between clusters estimated using k-means clustering, as described in Chen et al. (2022+)
+Description: An implementation for a difference-in-means test between clusters of observations identified via k-means clustering, as described in Chen and Witten (2022+)
 Imports: rdist, stats, intervals
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 3.5)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2

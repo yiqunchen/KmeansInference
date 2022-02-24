@@ -1,0 +1,100 @@
+---
+title: "Technical details"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Technical details}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+<center>
+
+![Figure 1: (a): The piecewise constant segments of $\beta$. (b): Both tests based on $p_{\text{Hyun}}$ and $p_{\hat{C}_1,\hat{C}_2}$ control the selective Type I error, but the z-test $p_{\text{Naive}} = \mathbb{P}(|\nu^\top Y|\geq |\nu^\top y|)$ leads to inflated selective Type I error. (c): For a given value of the effect size ($|\nu^\top\beta|/\sigma$), the test based on $p_{\hat{C}_1,\hat{C}_2}$ has higher power than the test based on $p_{\text{Hyun}}$. Power for both tests increases as a function of the effect size.](../man/figures/combined_two_d.png){width=80%}
+
+</center>
+
+
+### Overview
+
+The graph fused lasso (GFLasso) is widely used to reconstruct signals that are piecewise constant on a graph, meaning that nodes connected by an edge in the graph tend to have identical values. Many special cases of the graph fused lasso have been studied in the literature. For instance, we can consider the one-dimensional chain graph, in which the observations are ordered, and there is an edge between each pair of adjacent observations. This leads to the one-dimensional fused lasso, a well-studied and celebrated method for changepoint detection. When the underlying graph is a two-dimensional grid graph, constructed by connecting each node to its four closest neighbors (up, down, left, right), the graph fused lasso is also known as total-variational denoising. 
+
+One desirable property of the graph fused lasso is that we can segment its solution into *connected components*, that is, sets of elements of the reconstructed signals that share a common value. In this tutorial, we consider testing for a difference in the means across two connected components, estimated using the graph fused lasso. A naive procedure, e.g., a two-sample z-test, will not control the selective Type I error &mdash; the probability of falsely rejecting the null hypothesis *given that we decided to conduct the test* &mdash; since the null hypothesis under consideration is itself a function of the same data used for testing. 
+
+In our manuscript, we propose a new test for this task that controls the selective Type I error, and conditions on less information than existing approaches, leading to substantially higher power. In addition, we provide a computationally-efficient implementation of the proposed p-value (see Section 3 of our manuscript for details). 
+
+### Model setup
+We consider a vector $Y \in \mathbb{R}^n$, a noisy realization of the signal $\beta \in \mathbb{R}^n$, 
+$$Y_j = \beta_j + \epsilon_j , \quad \epsilon_j \sim_{\text{i.i.d.}} \mathcal{N}(0, \sigma^2), \quad j =1, \ldots, n,$$
+ with known variance $\sigma^2$. We assume that $\beta$ is *piecewise constant* on a graph, meaning that the elements of $\beta$ are connected through an undirected graph $G=(V,E)$, where each $\beta_j$ corresponds to a node, and adjacent elements tend to take on equal values. 
+ 
+### Graph fused lasso 
+It is natural to estimate $\beta$ by the graph fused lasso, 
+$$
+  \hat{\beta} = \text{argmin}_{\beta \in \mathbb{R}^n} \left\{ \frac{1}{2}\Vert y-\beta\Vert_2^2 +\lambda \sum_{(j,j')\in E}|\beta_j-\beta_{j'}| \right\},
+$$
+where $G=(V,E)$ is the undirected graph,  $V=\{1,\ldots,n\}$,  and  $(j,j') \in E$ indicates that the $j$th and $j'$th vertices in the graph are connected by an edge. 
+
+For sufficiently large values of the non-negative tuning parameter $\lambda$, we will have $\hat\beta_j = \hat\beta_{j'}$ for some $(j,j') \in E$. We can segment $\hat\beta$ into *connected components* &mdash;  that is, sets of elements of $\hat\beta$ that are connected in the original graph and share a common value. 
+
+### Inference for the difference in means of two connected components
+
+We consider testing the null hypothesis that the true mean of $\beta$ is the same across two *estimated* connected components, i.e.,
+$$  H_0: {\sum_{j \in \hat{C}_1} \beta_j  }/{|\hat{C}_1|  }  =
+ { \sum_{j' \in \hat{C}_2} \beta_{j'} }/{   |\hat{C}_2|} \mbox{ versus }  H_1: {\sum_{j \in \hat{C}_1} \beta_j  }/{|\hat{C}_1|  }  \neq
+ { \sum_{j' \in \hat{C}_2} \beta_{j'} }/{   |\hat{C}_2|},
+$$
+where $\hat{C}_1\subseteq V$ and $\hat{C}_2\subseteq V$ are two connected components of $\hat\beta$, with cardinalities $|\hat{C}_1|$ and $|\hat{C}_2|$. This is equivalent to testing 
+  $H_0: \nu^\top \beta = 0$ versus $H_1: \nu^\top \beta \neq 0$, where  $\nu \in \mathbb{R}^n$ is defined as 
+$$  \nu_{j} =  1_{( j \in \hat{C}_1)} / |\hat{C}_1| -  1_{( j \in \hat{C}_2)}/|\hat{C}_2|\quad j = 1,\ldots,n.$$
+
+This results in a challenging problem because we need to account for the process that led us to test this very hypothesis! Drawing from the selective inference literature, Hyun et al. (2018) tackled this problem by proposing the following $p$-value: 
+ $$p_{\text{Hyun}} = \mathbb{P}_{H_0}\left(|\nu^{\top} Y |\geq |\nu^{\top} y| \;\middle |\; \bigcap_{k=1}^K \left\{ M_k(Y) = M_k(y) \right\}, \Pi_{\nu}^{\perp} Y= \Pi_{\nu}^{\perp} y\right),$$
+ where ${M}_k(y)$ is the output of the $k$th step of the dual-path algorithm (Tibshirani and Taylor 2011); see Hyun et al. (2018) and Section 2 of Chen et al. (2021+) for (i) a summary of the dual path algorithm for the graph fused lasso and (ii) the definition of ${M}_k(y)$. Here, $\Pi_{\nu}^{\perp}$ is an orthogonal projection matrix used to eliminate nuisance parameters. The key insight of Hyun et al. (2018)  is that $p_{\text{Hyun}}$ can be recast as the survival function of a $\mathcal{N}(0, \sigma^2||\nu||_2^2)$ random variable, truncated to an interval that can be efficiently computed from the data. 
+
+Our paper relies on a simple observation: the $p$-value $p_{\text{Hyun}}$ conditions on too much information (i.e., it conditions on *all* of the outputs of the first $K$ steps of the dual-path algorithm). Typically, the contrast vector $\nu$ in $H_0: \nu^{\top} \beta=0$ is constructed using only the pair of connected components of interest. While conditioning on additional information will preserve the selective Type I error control, it will lead to low power in practice. 
+
+Building on this observation, in our work, we propose the following $p$-value:
+$$
+p_{\hat{C}_1,\hat{C}_2} =  \mathbb{P}_{H_0}\left(|\nu^\top Y |\geq |\nu^\top y|  \;\middle\vert\;  \hat{C}_1(y),  \hat{C}_2(y) \in \mathcal{CC}_K(Y), \Pi_{\nu}^{\perp} Y= \Pi_{\nu}^{\perp} y \right),
+$$
+where  $\hat{C}_1,\hat{C}_2$ are two estimated connected components used to construct $\nu$, and $\mathcal{CC}_K(Y)$ is the set of *all* connected components after running $K$ steps of the dual path algorithm on the data $Y$. We show that this $p$-value for testing $H_0$ can be written as 
+$$
+p_{\hat{C}_1,\hat{C}_2} = \mathbb{P}\left(|\phi|\geq |\nu^\top y| \;\middle\vert\; \hat{C}_1(y),\hat{C}_2(y) \in \mathcal{CC}_K(y'(\phi))\right),
+$$
+where $\phi\sim \mathcal{N}(0,\sigma^2||\nu||_2^2)$, and  $y'(\phi) = \Pi_{\nu}^{\perp}y+\phi\cdot \frac{\nu}{||\nu||_2^2} = y+\left(\frac{\phi-\nu^{\top}y}{||\nu||_2^2}\right)\nu$ can be thought of as a perturbation of the observed data $y$, along the direction of $\nu$.
+
+Moreover, defining $\mathcal{S}_{\hat{C}_1,\hat{C}_2}=\{\phi: \hat{C}_1,\hat{C}_2 \in \mathcal{CC}_K(y'(\phi))\}$, we can express the $p$-value as
+$\mathbb{P}\left(|\phi| \geq |\nu^\top y| \;\middle |\; \phi \in \mathcal{S}_{\hat{C}_1,\hat{C}_2} \right)$. Thus, it suffices to characterize the set $\mathcal{S}_{\hat{C}_1,\hat{C}_2}$.
+
+However, computing $\mathcal{S}_{\hat{C}_1,\hat{C}_2}$ is a challenging task, because instead of an interval as in the case of Hyun et al. (2018), $\mathcal{S}_{\hat{C}_1,\hat{C}_2}$ is a union of a potentially very large number of intervals. In other words, if we express the set as $\mathcal{S}_{\hat{C}_1,\hat{C}_2} = \bigcup_{i\in\mathcal{I}} (a_i,a_{i+1})$, then the index set $\mathcal{I}$ could potentially be very large. In our work, we make use of a recent algorithm proposed in Jewell et al. (2019) to characterize the set $\mathcal{S}_{\hat{C}_1,\hat{C}_2}$ efficiently. The key insight is that empirically, only a small subset of the potentially very large number of intervals is relevant to computing $\mathcal{S}_{\hat{C}_1,\hat{C}_2}$, i.e., the cardinality of the set $\mathcal{I}$ is usually small to moderate. Moreover, the set $\mathcal{I}$ can be computed with an efficient line search algorithm.
+
+Our software implements an efficient calculation of $p_{\hat{C}_1,\hat{C}_2}$. We demonstrate that the resulting test has higher power than that based on $p_{\text{Hyun}}$, while still preserving the selective Type I error control. Additional details and other extensions can be found in Sections 3 and 4 of our paper (Chen et al. 2021+).
+
+### Extensions
+Our software also allows for the following extensions:
+
+1. Generate $(1-\alpha)$ selective confidence intervals for the parameter $\nu^\top \beta$, the difference in means across two connected components.
+2. An alternative conditioning set parameterized by the number of connected components in the graph fused lasso solution (as opposed to K, the number of steps for the dual path algorithm).
+
+### References
+
+Chen YT, Jewell SW, Witten DM. (2022+) More powerful selective inference for the graph fused lasso. arXiv preprint. https://arxiv.org/abs/2109.10451.
+
+Fithian W, Sun D, Taylor J. (2014) Optimal Inference After Model Selection. arXiv:1410.2597 [mathST]. 
+
+Hyun S, G’Sell M, Tibshirani RJ. (2018) Exact post-selection inference for the generalized lasso path. Electron J Stat.
+
+Jewell SW, Fearnhead P, Witten DM. Testing for a Change in Mean After Changepoint Detection. To appear in JRSSB.
+
+Lee J, Sun D, Sun Y, Taylor J. Exact post-selection inference, with application to the lasso. Ann Stat. 2016;44(3):907-927. doi:10.1214/15-AOS1371
+
+
+
+
