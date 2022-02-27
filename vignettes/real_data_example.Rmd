@@ -1,5 +1,5 @@
 ---
-title: "Real data application"
+title: "Application to single-cell RNA Seq data"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Real data application}
@@ -18,6 +18,7 @@ In this tutorial, we illustrate how to apply the functions in the `KmeansInferen
 First we load the package and read in data from GitHub:
 ```{r}
 library(KmeansInference)
+library(SpikeInference)
 library(ggplot2)
 require(RCurl)
 require(latex2exp)
