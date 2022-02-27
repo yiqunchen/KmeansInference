@@ -1,4 +1,5 @@
 #' k means estimation
+#'
 #' @export
 kmeans_estimation <- function(X, k, iter.max = 10, nstart = 1, seed = 1234,
                               tol_eps = 1e-2, verbose=TRUE){
@@ -58,11 +59,107 @@ kmeans_estimation <- function(X, k, iter.max = 10, nstart = 1, seed = 1234,
 }
 
 
-#' k means inference
+# ----- main function to test equality of the means of two estimated connected components -----
+#' Testing for a difference in means between clusters of observations
+#' identified via k-means clustering.
+#'
+#' This functions tests the null hypothesis of no difference in means between
+#' two estimated clusters \code{cluster_1} and \code{cluster_2} of the output of the
+#' k means clustering solution obtained via the Lloyd's algorithm.
+#' The ordering are numbered as per the results of the \code{fusedlasso}
+#' function in the \code{genlasso} package.
+#'
+#'(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
+#iter.max = 10, nstart = 1,
+#seed = 1234)
+#' Input:
+#' @param y Numeric vector; \eqn{n} dimensional observed data
+#' @param D Numeric matrix; \eqn{m} by \eqn{n} penalty matrix, i.e.,
+#' the oriented incidence matrix over the underlying graph
+#' @param c1,c2 Integers selecting the two connected components to test, as indexed by the results of
+#' \code{genlasso::fusedlasso}.
+#' @param method One of "K" or "CC", which indicates which conditioning set to use
+#' @param sigma Numeric; noise standard deviation for the observed data, a non-negative number.
+#' @param K Integer; number of steps to run the dual-path algorithm.
+#' It must be specified if method=="K".
+#' @param L Integer; the targeted number of connected components.
+#' It must be specified if method=="CC".
+#' @param early_stop Numeric; specify when the truncation set computation
+#' should be terminated. The default is NULL, which indicates infinity.
+#' @param compute_ci Logical; the default is False. Specifying whether confidence intervals for \eqn{\nu^{T}\beta}, the
+#' difference in means between the two estimated connected components, should be computed.
+#' @param alpha_level Numeric; parameter for the 1-\code{alpha_level} confidence interval, defeault to 0.05
+#' @return Returns a list with elements:
+#' \itemize{
+#' \item \code{pval} the p-value in Chen et al. (2021+)
+#' \item \code{truncation_set} the conditioning set of Chen et al. (2021+) stored as \code{Intervals} class
+#' \item \code{test_stats} test statistics: the difference in means of two connected components
+#' \item \code{beta_hat} Graph fused lasso estimates
+#' \item \code{connected_comp} Estimated connected component
+#' \item \code{Naive} the naive p-value using a z-test
+#' \item \code{Hyun} the p-value proposed in Hyun et al. (2018)
+#' \item \code{hyun_set} the conditioning set of  Hyun et al. (2018) stored as \code{Intervals} class
+#' \item \code{CI_result} confidence interval of level 1-\code{alpha_level} if \code{compute_ci=TRUE}
+#' }
+#' @export
+#'
+#' @details
+#' Consider the generative model \eqn{Y_j = \beta_j + \epsilon_j, \epsilon_j \sim N(0, \sigma^2). j=1,...,n}, where
+#' the underlying signal \eqn{\beta} is assumed to be piecewise constant with respect to an underlying
+#' graph. The fused lasso estimate minimizes the following objective function
+#' \deqn{minimize_{\beta} \frac{1}{2} \sum_{j=1}^{n} ( y_j - \beta_j )^2 + \lambda \sum_{(i,j)\in E}|\beta_i-\beta_j|,}
+#' where E is the edge set of the underlying graph. The solution \eqn{\hat{\beta}} can then be
+#' segment into connected components; that is, the set of \eqn{\hat{\beta}} that takes on the
+#' same value, and are connected in the original graph.
+#'
+#' Now suppose we want to test whether the means of two estimated connected components \code{c1} and \code{c2}
+#' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \nu^T \beta = 0} versus
+#' \eqn{H_{1}:  \nu^T \beta \neq 0} for suitably chosen \eqn{\nu}.
+#'
+#' This function computes the following p-value:
+#' \deqn{P(|\nu^T Y| \ge |\nu^T y| \; | \;  \hat{C}_1, \hat{C}_2 \in CC_K(Y),  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y),}
+#' where \eqn{CC_K(Y)} is the set of estimated connected components from applying K steps of the dual path algorithm on data Y
+#' , and \eqn{\Pi_\nu^\perp} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
+#' In particular, the test based on this p-value controls the selective Type I error and has higher power than an existing method
+#' by Hyun et al. (2018). Readers can refer to the Section 3 in Chen et al. (2021+) for more details.
+#'
+#' @examples
+#' lev1 <- 0 # mean for group 1
+#' lev2 <- 3 # mean (absolute value) for group 2/3
+#' sigma <- 1 # level of noise
+#' nn <- 8 # grid size
+#' Dmat <- genlasso::getD2d(nn, nn) # generate D matrix for the 2D fused lasso
+#' ### Create the underlying signal
+#' A <- matrix(lev1, ncol=nn, nrow = nn)
+#' A[1:round(nn/3),1:round(nn/3)] <- 1*lev2
+#' A[(nn-2):(nn),(nn-2):(nn)] <- -1*lev2
+#' ### Visualize the underlying signal
+#' lattice::levelplot(A)
+#' set.seed(2005)
+#' A.noisy <- A + rnorm(nn^2,mean=0,sd=sigma)
+#' y <- c(t(A.noisy))
+#' ### Now use the fusedlasso function to obtain estimated connected components after K=13
+#' ### steps of the dual path algorithm
+#' K = 13
+#' complete_sol <- genlasso::fusedlasso(y=y,D=Dmat,maxsteps=K)
+#' beta_hat <- complete_sol$beta[,K]
+#' ### estimated connected components
+#' estimated_CC <- complete_sol$pathobjs$i
+#' estimated_CC
+#' ### Run a test for a difference in means between estimated connected components 1 and 2
+#' result_demo <- fusedlasso_inf(y=y, D=Dmat, c1=1, c2=2, method="K", sigma=sigma, K=K)
+#' summary(result_demo)
+#'
+#' This tests the null hypothesis of no difference in means between clusters k1 and k2
+#' at level K in a hierarchical clustering. (The K clusters are numbered as per the
+#' results of the cutree function in the stats package.)
+#' @references
+#' Chen YT, Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint.
+#' https://arxiv.org/abs/xxxx.xxxxx.
 #' @export
 kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
-                             iter.max = 10, nstart = 1,
-                             seed = 1234, tol_eps = 1e-6, verbose=TRUE){
+                             iter.max = 10, seed = 1234, nstart = 1,
+                             tol_eps = 1e-6, verbose=TRUE){
 
   set.seed(seed)
   if(!is.matrix(X)) stop("X should be a matrix")
@@ -82,6 +179,10 @@ kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
   p <- dim(X)[2]
   # get the list of all assigned clusters first
   estimated_k_means <- kmeans_estimation(X, k, iter.max, nstart, seed, tol_eps, verbose)
+  # check if we get the desired number of clusters:
+  if(length(unique(estimated_k_means$final_cluster))<k){
+    stop("k-means clustering did not return the desired number of clusters! Try a different seed?")
+  }
   estimated_final_cluster <- estimated_k_means$cluster[[estimated_k_means$iter]]
   all_T_clusters <- do.call(rbind, estimated_k_means$cluster)
   all_T_centroids <- estimated_k_means$centers

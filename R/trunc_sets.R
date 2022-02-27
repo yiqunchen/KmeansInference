@@ -305,6 +305,7 @@ norm_phi_canonical_kmeans <- function(X, last_centroids, XTv, XTv_norm, dir_XTv,
 
 #' Implement the minus operation for two quadratic inequalities
 #'
+#' @keywords internal
 minus_quad_ineq <- function(quad1, quad2){
   coef_list <- list("quad" = quad1$quad-quad2$quad, "linear" = quad1$linear-quad2$linear,
                     "constant"= quad1$constant-quad2$constant)
@@ -313,6 +314,7 @@ minus_quad_ineq <- function(quad1, quad2){
 
 
 #' Compute set S for isotropic case
+#' @keywords internal
 #' @export
 kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
                                  all_T_centroids,
@@ -386,6 +388,7 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
 }
 
 #' Compute set S for isotropic case
+#' @keywords internal
 #' @export
 kmeans_compute_S_genCov <- function(X, estimated_k_means, all_T_clusters,
                                     all_T_centroids,

@@ -2,6 +2,8 @@ pandoc: 2.14.2
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
+  Tutorials: Tutorials.html
+  real_data_example: real_data_example.html
   technical_details: technical_details.html
-last_built: 2022-02-24T23:05Z
+last_built: 2022-02-24T23:36Z
 
