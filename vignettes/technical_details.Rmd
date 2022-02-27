@@ -33,8 +33,8 @@ In this tutorial, we provide an overview of our selective inference approach. De
 
 ### Model setup
 We consider the following simple and well-studied model for $n$ observations and $q$ features:
-$$X \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q),$$
-where $\mu \in \mathbb{R}^{n\times q}$ has unknown rows $\mu_i$, and $\sigma^2 > 0$ is unknown. This is equivalent of positing that $X_i\sim_{ind.} \mathcal{N}(\mu_i,\sigma^2 \textbf{I}_q)$. In addition, we use $x$ to denote a realization of the data generating model $X$.
+$$\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q),$$
+where $\mu \in \mathbb{R}^{n\times q}$ has unknown rows $\mu_i$, and $\sigma^2 > 0$ is unknown. This is equivalent of positing that $X_i\sim_{ind.} \mathcal{N}(\mu_i,\sigma^2 \textbf{I}_q)$. In addition, we use $x$ to denote a realization of the data generating model $\mathbf{X}$.
 
 ### k-means clustering
 Given samples $x_1,\ldots,x_n \in \mathbb{R}^q$, and a positive integer $K$, $k$-means clustering partitions the $n$ samples into disjoint subsets $\hat{\mathcal{C}}_1,\ldots,\hat{\mathcal{C}}_K$  by solving the following optimization problem:
@@ -53,7 +53,7 @@ It is not typically possible to solve for the global optimum for this optimizati
 After applying the $k$-means clustering algorithm to obtain $\mathcal{C}(x)$, a partition of the samples $\{1,\ldots,n\}$, we might then consider testing the null hypothesis that the true mean is the same across two *estimated* clusters, i.e.,
 $$   H_0: \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{\mu}_i/|\hat{\mathcal{C}}_1| = \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{\mu}_i/|\hat{\mathcal{C}}_2|   \mbox{ versus }  H_1: \sum_{i\in \hat{\mathcal{C}}_1}\mathbf{\mu}_i/|\hat{\mathcal{C}}_1| \neq \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{\mu}_i/|\hat{\mathcal{C}}_2|,
 $$
-where $\hat{\mathcal{C}}_1,\hat{\mathcal{C}}_2 \in \mathcal{C}({x})$ are estimated clusters with cardinalities $|\hat{\mathcal{C}}_1|$ and $|\hat{\mathcal{C}}_2|$. This is equivalent to testing
+where $\hat{\mathcal{C}}_1,\hat{\mathcal{C}}_2 \in \mathcal{C}(\mathbf{x})$ are estimated clusters with cardinalities $|\hat{\mathcal{C}}_1|$ and $|\hat{\mathcal{C}}_2|$. This is equivalent to testing
  $H_0: {\mu}^\top \nu = {0}_q  \mbox{ versus }  H_1: {\mu}^\top \nu \neq {0}_q$, 
 \begin{align}
     \nu_i = 1\{i\in\hat{\mathcal{C}}_1\}/|\hat{\mathcal{C}}_1| - 1\{i\in\hat{\mathcal{C}}_2\}/|\hat{\mathcal{C}}_2|, \quad i = 1,\ldots, n,
@@ -62,30 +62,30 @@ and $1\{A\}$ is an indicator function that equals to 1 if the event $A$ holds, a
 
 This results in a challenging problem because we need to account for the clustering process that led us to test this very hypothesis! Drawing from the selective inference literature, we tackle this problem by proposing the following $p$-value: 
 \begin{align} 
- p_{k-means} = \mathbb{P}_{H_0}\left( \Vert {X}^{\top}\nu \Vert_2 \geq  \Vert {x}^{\top}\nu  \Vert_2 \;\middle\vert\;   \bigcap_{t=0}^{T}\bigcap_{i=1}^{n}\left\{c_i^{(t)}\left({X}\right) = c_i^{(t)}\left({x}\right)\right\},\,\Pi_{\nu}^\perp {X} = \Pi_{\nu}^\perp {x},\, \text{dir}({X}^{\top}\nu) =  \text{dir}({x}^{\top}\nu)\right),
+ p_{k-means} = \mathbb{P}_{H_0}\left( \Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2 \;\middle\vert\;   \bigcap_{t=0}^{T}\bigcap_{i=1}^{n}\left\{c_i^{(t)}\left(\mathbf{X}\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\},\,\Pi_{\nu}^\perp \mathbf{X} = \Pi_{\nu}^\perp \mathbf{x},\, \text{dir}(\mathbf{X}^{\top}\nu) =  \text{dir}(\mathbf{x}^{\top}\nu)\right),
 \end{align} 
-where $c_i^{(t)}\left({X}\right)$ is the cluster assigned to the $i$th observation at the $t$th iteration of Algorithm 1 and $\Pi_{\nu}^{\perp}$ is an orthogonal projection matrix used to eliminate nuisance parameters. For a non-zero vector $w$, $\text{dir}(w) = w/\Vert w\Vert_2$ is the unit vector along the direction of $w$. 
+where $c_i^{(t)}\left(\mathbf{X}\right)$ is the cluster assigned to the $i$th observation at the $t$th iteration of Algorithm 1 and $\Pi_{\nu}^{\perp}$ is an orthogonal projection matrix used to eliminate nuisance parameters. For a non-zero vector $w$, $\text{dir}(w) = w/\Vert w\Vert_2$ is the unit vector along the direction of $w$. 
 We show that this $p$-value for testing $H_0$ can be written as 
 $$
-p_{k-means} = \mathbb{P}\left(  \phi \geq \Vert{x}^\top \nu \Vert_2 \;\middle\vert\; \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left({x}'(\phi)\right) = c_i^{(t)}\left({x}\right)\right\}   \right),
+p_{k-means} = \mathbb{P}\left(  \phi \geq \Vert\mathbf{x}^\top \nu \Vert_2 \;\middle\vert\; \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left(\mathbf{x}'(\phi)\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\}   \right),
 $$
-where $\phi\sim (\sigma\Vert\nu\Vert_2)\cdot\chi_q$ is a scaled $\chi$ distribution with degrees of freedom $q$, and  ${x}'(\phi) =  x + \left( \frac{\phi-\Vert {x}^{\top}\nu  \Vert_2 }{\Vert \nu  \Vert_2^2 }\right) \cdot \nu \left({\text{dir}}({x}^{\top}\nu)\right)^{\top}$ can be thought of as a perturbation of the observed data $x$, along the direction of ${x}^{\top}\nu$.
+where $\phi\sim (\sigma\Vert\nu\Vert_2)\cdot\chi_q$ is a scaled $\chi$ distribution with degrees of freedom $q$, and  $\mathbf{x}'(\phi) =  x + \left( \frac{\phi-\Vert \mathbf{x}^{\top}\nu  \Vert_2 }{\Vert \nu  \Vert_2^2 }\right) \cdot \nu \left({\text{dir}}(\mathbf{x}^{\top}\nu)\right)^{\top}$ can be thought of as a perturbation of the observed data $x$, along the direction of $\mathbf{x}^{\top}\nu$.
 
-Moreover, if we let $\mathcal{S}_T$ denote $\left\{ \phi\geq0: \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left({x}'(\phi)\right) = c_i^{(t)}\left({x}\right)\right\}   \right\}$, then $p_{k-means}$ can be rewritten as $\mathbb{P}\left( \phi \geq \Vert{x}^\top \nu \Vert_2 \;\middle\vert\; \phi\in \mathcal{S}_T   \right)$. Therefore, it suffices to characterize the set $\mathcal{S}_{T}$, because $\phi \;\middle\vert\; \phi\in \mathcal{S}_T $ will follow a truncated $\chi$ distribution.
+Moreover, if we let $\mathcal{S}_T$ denote $\left\{ \phi\geq0: \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left(\mathbf{x}'(\phi)\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\}   \right\}$, then $p_{k-means}$ can be rewritten as $\mathbb{P}\left( \phi \geq \Vert\mathbf{x}^\top \nu \Vert_2 \;\middle\vert\; \phi\in \mathcal{S}_T   \right)$. Therefore, it suffices to characterize the set $\mathcal{S}_{T}$, because $\phi \;\middle\vert\; \phi\in \mathcal{S}_T $ will follow a truncated $\chi$ distribution.
 
 Our software implements an efficient calculation of this $p$-value by analytically characterizing the set $\mathcal{S}_T$. Our key insight is that the set $\mathcal{S}_T$ can be expressed as the intersection of solutions to $\mathcal{O}(nKT)$ quadratic inequalities of $\phi$, where $n,K,$ and $T$ are the number of observations, the number of estimated clusters, and the number of iterations of Algorithm 1, respectively. The test based on the resulting $p$-value will control the selective Type I error, in the sense of Lee et al. (2016) and Fithian et al. (2014); see also Figure 1(c) of this tutorial. Additional details can be found in Sections 2 and 3 of our paper (Chen and Witten 2022+)).
 
 Remark: by contrast, the Wald $p$-value takes the form 
 $$
-\mathbb{P}(\Vert {X}^{\top}\nu \Vert_2 \geq  \Vert {x}^{\top}\nu  \Vert_2),
+\mathbb{P}(\Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2),
 $$
 which ignores the fact that the contrast vector $\nu$ is estimated from the data via $k$-means clustering, and therefore leads to a test with an inflated Type I error.
 
 ### Extensions
 Our software also allows for the following extensions:
 
-1. Allow for inference with unknown $\sigma$, i.e., where $X \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with *unknown* $\sigma$.
-2. Allow for inference with a known, positive-definite covariance matrix $\Sigma$, i.e., where $X \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \Sigma)$.
+1. Allow for inference with unknown $\sigma$, i.e., where $\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with *unknown* $\sigma$.
+2. Allow for inference with a known, positive-definite covariance matrix $\Sigma$, i.e., where $\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \Sigma)$.
 
 ### References
 

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>k means estimation — kmeans_estimation • KmeansInference</title>
+<title>Perform k-means clustering on a data matrix. — kmeans_estimation • KmeansInference</title>
 
 
 <!-- jquery -->
@@ -41,8 +41,8 @@
   <link href="../extra.css" rel="stylesheet">
   
 
-<meta property="og:title" content="k means estimation — kmeans_estimation" />
-<meta property="og:description" content="k means estimation" />
+<meta property="og:title" content="Perform k-means clustering on a data matrix. — kmeans_estimation" />
+<meta property="og:description" content="Perform k-means clustering on a data matrix." />
 
 
 
@@ -114,26 +114,66 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>k means estimation</h1>
+    <h1>Perform k-means clustering on a data matrix.</h1>
     
     <div class="hidden name"><code>kmeans_estimation.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>k means estimation</p>
+    <p>Perform k-means clustering on a data matrix.</p>
     </div>
 
     <pre class="usage"><span class='fu'>kmeans_estimation</span><span class='op'>(</span>
   <span class='va'>X</span>,
   <span class='va'>k</span>,
   iter.max <span class='op'>=</span> <span class='fl'>10</span>,
-  nstart <span class='op'>=</span> <span class='fl'>1</span>,
   seed <span class='op'>=</span> <span class='fl'>1234</span>,
-  tol_eps <span class='op'>=</span> <span class='fl'>0.01</span>,
+  tol_eps <span class='op'>=</span> <span class='fl'>1e-04</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>X</th>
+      <td><p>Numeric matrix; \(n\) by \(q\) matrix of observed data</p></td>
+    </tr>
+    <tr>
+      <th>k</th>
+      <td><p>Integer; the number of clusters for k-means clustering</p></td>
+    </tr>
+    <tr>
+      <th>iter.max</th>
+      <td><p>Positive integer;     the maximum number of iterations allowed in the k-means clustering (Lloyd's) algorithm.
+Default to <code>10</code>.</p></td>
+    </tr>
+    <tr>
+      <th>seed</th>
+      <td><p>Random seed for the initialization in k-means clustering algorithm.</p></td>
+    </tr>
+    </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>Returns a list with the following elements:
+"cluster" = cluster_assign_list, "centers" = centroid_list,</p><ul>
+<li><p><code>final_cluster</code> Estimated clusters via k-means clustering</p></li>
+<li><p><code>centers</code> A matrix of the cluster centroids.</p></li>
+<li><p><code>objective</code> The objective function at the final iteration of the k-means algorithm.</p></li>
+<li><p><code>final_cluster</code></p></li>
+</ul>
+
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The data given by X are clustered by the k-means clustering,
+which aims to partition the points into k groups such that the sum of squares from points
+to the assigned cluster centers is minimized. In other words, the k-means clustering solves
+the following optimization problem
+$$ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
+ \right\Vert_2^2 , $$
+ subject the constraint that \(\mathcal{C}_1,..., {\mathcal{C}_K}\) forms a partition of the integers \(1,..., n\).
+The algorithm from Lloyd (1957) (or sometimes, MacQueen (1967)) is used to produce a solution.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

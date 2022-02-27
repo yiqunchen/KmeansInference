@@ -16,140 +16,106 @@ knitr::opts_chunk$set(
 
 In this tutorial, we demonstrate basic use of the `KmeansInference` package. 
 
-First we load the package:
+First we load relevant packages:
 ```{r}
-require(KmeansInference)
+library(KmeansInference)
+library(ggplot2)
 ```
 
-We first use the `simulate_ar1` function to simulate from an AR(1) model for calcium imaging data according to 
-$$Y_t = c_t + \epsilon_t, \epsilon_t \sim N(0, \sigma^2), \; t = 1,\ldots, T,$$ where $$c_t = \gamma  c_{t-1} + z_t, z_t\geq 0,  \; t = 2,\ldots, T.$$ If $z_t>0$, then there is a spike at the $t$th timestep. We denote the locations of true spikes, $\{t:z_t> 0\}$, as $\{\tau_1,\ldots, \tau_K\}$.
-
-In the figure below, we display one such simulation $y_1,\ldots,y_{1,000}$ (gray dots), with  $T=1,000, \sigma = 0.1, \gamma = 0.98, z_t \overset{i.i.d.}{\sim}\text{Poisson}(0.01)$. The true calcium concentration and true spikes are displayed in green lines and vertical bars, respectively.
+We first generate data according to $\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
+\begin{align}
+\label{eq:power_model}
+{\mu}_1 =\ldots = {\mu}_{50} = \begin{bmatrix}
+-\delta/2 \\ 0_{q-1}
+\end{bmatrix}, \; {\mu}_{51}=\ldots = {\mu}_{100} = \begin{bmatrix}
+ 0_{q-1} \\ \sqrt{3}\delta/2
+\end{bmatrix} ,\;
+{\mu}_{101}=\ldots = {\mu}_{150} = \begin{bmatrix}
+\delta/2 \\ 0_{q-1}.
+\end{bmatrix}
+\end{align}
+Here, we can think of $\mathcal{C}_1 = \{1,\ldots,50\},\mathcal{C}_2 = \{51,\ldots,100\},\mathcal{C}_3 = \{101,\ldots,150\}$ as the ``true clusters''.
+In the figure below, we display one such simulation $\mathbf{x}\in\mathbb{R}^{100\times 2}$ with $\delta=10$. 
 
 ```{r fig.align="center",  fig.height = 5, fig.width = 5}
-gam <- 0.98
-sigma <- 0.3
-T_length <- 1000
-curr_sim <- simulate_ar1(n = T_length, gam = gam, poisMean = 0.01, sd = sigma, seed = 2)
-plot(curr_sim)
+set.seed(2022)
+n <- 150
+true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
+delta <- 10
+q <- 2
+mu <- rbind(c(delta/2,rep(0,q-1)), c(rep(0,q-1), sqrt(3)*delta/2), c(-delta/2,rep(0,q-1)) )
+sig <- 1
+X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+
+ggplot(data.frame(X), aes(x=X1, y=X2)) +
+  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+  theme_classic(base_size=18) + theme(legend.position="none") +
+  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+  theme(legend.title = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+```
+
+### k-means clustering (K=3)
+In the code below, we call the `kmeans_estimation` function to estimate spikes using the Lloyd's algorithm with $K=3$. In the figure below, observations are colored by the clusters obtained via $k$-means clustering with $K=3$. In this case, $k$-means recovers the true clusters perfectly. 
+
+```{r fig.align="center",  fig.height = 4, fig.width = 5}
+k <- 3
+estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2021)$final_cluster
+table(true_clusters,estimated_clusters)
+ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
+  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+  theme_classic(base_size=18) + theme(legend.position="none") +
+  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+  theme(legend.title = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+```
+
+### Inference for k-means clustering (K=3)
+
+In this section, we demonstrate how to use our software to obtain $p$-values for testing for a difference in means between clusters of observations identified via $k$-means clustering. As an example, consider testing for a difference in means between the blue cluster (labeled as 1 in `estimated_clusters`) and the pink cluster (labeled as 3 in `estimated_clusters`). 
+
+The code below demonstrates how to use the function `kmeans_inference`, which performs inference on the specified two estimated clusters. After obtaining the inferential result, we call the summary method to get a summary of the results, in the form of a data frame.
+
+
+```{r fig.align="center",  fig.height = 4, fig.width = 5}
+cluster_1 <- 1
+cluster_2 <- 3
+cl_1_2_inference_demo <- kmeans_inference(X, k=3, cluster_1, cluster_2,
+                                          sig=sig, iter.max = 20, seed = 2021)
+summary(cl_1_2_inference_demo)
+```
+
+In the summary, we have the $\ell_2$ norm of the difference in means, i.e.,$\left\Vert \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{\mu}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{\mu}_i/|\hat{\mathcal{C}}_2| \right\Vert_2$  (`test_stats`), the Wald p-value (`p_naive`), and the selective $p$-value (`p_kmeans`). In this case, the test based on $p_{k-means}$ can easily reject this null hypothesis that the blue and pink clusters have the same mean ($p_{k-means}<0.001$).
+
+### Inference for k-means clustering when the null hypothesis holds
+
+In this section, we demonstrate that our proposed $p$-value yields reasonable results when the null hypothesis does hold. Consider the same data as before, and we apply the $k$-means clustering with $K=4$ to obtain four estimated clusters. 
+
+```{r fig.align="center",  fig.height = 4, fig.width = 5}
+k_new <- 4
+new_estimated_clusters <- kmeans_estimation(X, k_new, iter.max = 20, seed = 2021)$final_cluster
+ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(new_estimated_clusters))) +
+  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+  theme_classic(base_size=18) + theme(legend.position="none") +
+  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange","grey")) +
+  theme(legend.title = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+table(true_clusters,new_estimated_clusters)
+```
+
+By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now $p_{k-means}$ yields a much more moderate $p$-value, and the test based on $p_{k-means}$ cannot reject the null hypothesis when it holds. By contrast, the Wald $p$-value is tiny and leads to an anti-conservative test.
+
+```{r fig.align="center",  fig.height = 4, fig.width = 5}
+cluster_1 <- 1
+cluster_2 <- 4
+cl_1_4_inference_demo <- kmeans_inference(X, k=4, cluster_1, cluster_2,
+                                          sig=sig, iter.max = 20, seed = 2021)
+summary(cl_1_4_inference_demo)
 ```
 
 
-### $\ell_0$ spike estimation 
-In the code below, we call the `spike_estimates` function to estimate spikes using the $\ell_0$-penalized problem with tuning parameter $\lambda=4$. The estimated calcium, $\hat{c_t}$, and the set of estimated spikes, $\{\hat{\tau}_1,\ldots, \hat{\tau}_{\hat{K}}\}$, are displayed in blue lines and vertical bars, respectively.
-```{r fig.align="center",  fig.height = 5, fig.width = 5}
-LAMBDA <- 0.7
-fit_spike <- spike_estimates(dat = curr_sim$fl, decay_rate = gam, 
-                             tuning_parameter = LAMBDA, 
-                             functional_pruning_out = FALSE)
-plot(fit_spike)
-```
 
 
-The `fit_spike` object now contains spike fit information, and the estimated spike times can be accessed using the `summary` function.
-```{r}
-fit_summary <- summary(fit_spike)
-head(fit_summary)
-```
 
-Importantly, the first five estimated spike locations are printed below.
-```{r}
-fit_summary[1:5,]
-```
 
-### $\ell_0$ spike inference 
-
-In this section, we demonstrate how to use our software to obtain $p$-values and confidence intervals for estimated spikes with 2 different window sizes ($h=1$ and $h=10$); for ease of display, we will only consider the first five estimated spikes.
-
-Recall that for a given $\hat\tau_j$, the $p$-value for testing the null hypothesis $H_0: \nu^\top c = 0$ can be expressed as 
-$$\mathbb{P}\left(\phi \geq \nu^\top y \;\middle|\; \phi \in \mathcal{S}\cap(0,\infty)\right),$$
-where $\mathcal{S}$ is the set of perturbations $\phi$ that leads to an estimated spike at $\hat\tau_j$. 
-
-The code below demonstrates how to use the function `spike_inference`, which estimates spikes *and* performs inference on the estimated spikes for input data. After performing inference, we can use the `summary` method to get result summaries (in the form of a data frame) of the outputs given by  `spike_inference`. 
-
-#### For h = 1:
-```{r}
-h <- 1
-inference_spike_toy_example_h_1 <- spike_inference(dat = curr_sim$fl, decay_rate = gam,
-                                       tuning_parameter = LAMBDA, window_size = h, 
-                                       sig2 = sigma*sigma, 
-                                       return_conditioning_sets = FALSE,return_ci = TRUE)
-
-h_1_summary <- summary(inference_spike_toy_example_h_1)
-knitr::kable(head(h_1_summary))
-```
-
-#### For h = 10:
-```{r}
-h <- 10
-inference_spike_toy_example_h_10 <- spike_inference(dat = curr_sim$fl, decay_rate = gam,
-                                       tuning_parameter = LAMBDA, window_size = h, 
-                                       sig2 = sigma*sigma, 
-                                       return_conditioning_sets = FALSE,return_ci = TRUE)
-
-h_10_summary <- summary(inference_spike_toy_example_h_10)
-knitr::kable(head(h_10_summary))
-
-```
-
-We see drastically smaller $p$-values for the five estimated spikes. Since each of the five estimated locations correspond to a true underlying spike, this demonstrates that larger $h$ leads to higher power empirically.
-
-We also provide a plot method for output by `spike_inference`. By default, it plots the estimated spikes associated with a positive change in fluorescence in orange ticks, and the subset with a p-value less than 0.05 in blue ticks.
-```{r fig.align="center",  fig.height = 5, fig.width = 5}
-plot(inference_spike_toy_example_h_10, alpha=0.05)
-```
-
-### Miscellaneous functions
-In addition to the aforementioned key functions, the package also includes the following helper functions: `construct_v` and `estimate_spike_by_firing_rate`.
-
-#### construct_v
-The function `construct_v` generates the contrast vector $\nu$ for the null hypothesis $H_0:\nu^\top c = 0$. We will demonstrate below that $\nu^\top c$ is indeed the change in calcium in the neighborhood of a given spike $\hat\tau_j$. We consider the case where there is no spike, i.e., the calcium is decaying exponentially, and we would expect $\nu^\top c=0$. In the example below, we set $c_1 = 3$, $c_t = 0.98 c_{t-1}, \; t=2,\ldots, 50$, $\hat\tau_j = 20$, and $h=5$.
-
-```{r}
-gam <- 0.98
-T_length <- 50
-calcium <- rep(3 * gam ^(0:(T_length - 1)))
-thj <- 20
-h <- 5
-v <- construct_v(length(calcium), thj, h, gam)
-sum(v*calcium)
-```
-We see that $\nu^\top c$ indeed evaluates to 0, up to machine precision.
-
-#### estimate_spike_by_firing_rate
-
-We have taken $\lambda$ to be known in this tutorial. Choosing an appropriate $\lambda$ value is critical to the quality of estimated spikes. The function  `estimate_spike_by_firing_rate` allows us to specify a target firing rate, and then to find the value of $\lambda$ that yields a number of estimated spikes that is close to that target firing rate.
-
-In the example below, we simulate from an AR-1 model with firing rate 0.05, i.e., we expect to have 5 spikes per 100 timesteps on average.
-```{r}
-gam <- 0.98
-T_length <- 1000
-firing_rate <- 0.05
-target_rate <- 0.05
-sigma <- 0.1
-
-curr_sim <- simulate_ar1(n = T_length, gam = gam, poisMean = firing_rate,
-                         sd = sigma, seed = 1)
-
-if(sigma>=0.5){
-  lam_max = 5
-}else{
-  lam_max = 1
-}
-
-iter_fit_spike <- estimate_spike_by_firing_rate(curr_sim, 
-                                           decay_rate = gam, target_firing_rate = target_rate, 
-                                           lam_min = 1e-7, lam_max = lam_max, max_iters=10,
-                                           tolerance=max(5,floor(T_length*firing_rate*0.05)))
-```
-
-The number of true spikes in the simulation is 48 (note: we expect to see 50 spikes on average).
-```{r}
-cat("Number of true spikes, " ,length(curr_sim$spikes),"\n")
-```
-
-We ran `estimate_spike_by_firing_rate` with a target firing rate of 0.05, and so we expect to obtain around 1000*0.05=50 estimated spikes. By chance, on this example, the function resulted in a value of $\lambda$ that gave us 48 estimated spikes.
-```{r}
-cat("Number of estimated spikes, " ,length(iter_fit_spike$spikes),"\n")
-```
 

@@ -22,3 +22,4 @@ kmeans_compute_S_iso(
 \description{
 Compute set S for isotropic case
 }
+\keyword{internal}

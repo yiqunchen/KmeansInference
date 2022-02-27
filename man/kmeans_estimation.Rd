@@ -2,18 +2,55 @@
 % Please edit documentation in R/kmeans_inf.R
 \name{kmeans_estimation}
 \alias{kmeans_estimation}
-\title{k means estimation}
+\title{Perform k-means clustering on a data matrix.}
 \usage{
 kmeans_estimation(
   X,
   k,
   iter.max = 10,
-  nstart = 1,
   seed = 1234,
-  tol_eps = 0.01,
+  tol_eps = 1e-04,
   verbose = TRUE
 )
 }
+\arguments{
+\item{X}{Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data}
+
+\item{k}{Integer; the number of clusters for k-means clustering}
+
+\item{iter.max}{Positive integer;     the maximum number of iterations allowed in the k-means clustering (Lloyd's) algorithm.
+Default to \code{10}.}
+
+\item{seed}{Random seed for the initialization in k-means clustering algorithm.}
+}
+\value{
+Returns a list with the following elements:
+"cluster" = cluster_assign_list, "centers" = centroid_list,
+\itemize{
+\item \code{final_cluster} Estimated clusters via k-means clustering
+\item \code{centers} A matrix of the cluster centroids.
+\item \code{objective} The objective function at the final iteration of the k-means algorithm.
+\item \code{final_cluster}
+}
+}
 \description{
-k means estimation
+Perform k-means clustering on a data matrix.
+}
+\details{
+The data given by X are clustered by the k-means clustering,
+which aims to partition the points into k groups such that the sum of squares from points
+to the assigned cluster centers is minimized. In other words, the k-means clustering solves
+the following optimization problem
+\deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
+ \right\Vert_2^2 , }
+ subject the constraint that \eqn{\mathcal{C}_1,..., {\mathcal{C}_K}} forms a partition of the integers \eqn{1,..., n}.
+The algorithm from Lloyd (1957) (or sometimes, MacQueen (1967)) is used to produce a solution.
+}
+\references{
+Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.
+Published in 1982 in IEEE Transactions on Information Theory, 28, 128–137.
+
+MacQueen, J. (1967). Some methods for classification and analysis of multivariate observations.
+In Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability,
+pp. 281–297. Berkeley, CA: University of California Press.
 }

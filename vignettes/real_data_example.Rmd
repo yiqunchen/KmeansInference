@@ -13,18 +13,17 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this tutorial, we demonstrate how to apply the functions in the `SpikeInference` package to a calcium imaging dataset collected initially in Chen et al. (2013). 
+In this tutorial, we illustrate how to apply the functions in the `KmeansInference` package to a  collected initially in Chen et al. (2013). 
 
 First we load the package and read in data from GitHub:
 ```{r}
-require(SpikeInference)
+library(KmeansInference)
+library(ggplot2)
 require(RCurl)
-require(ggplot2)
 require(latex2exp)
 require(scales)
 require(dplyr)
 consistent_color <- scales::hue_pal()(8)
-
 
 link_calcium <- getURL("https://raw.githubusercontent.com/yiqunchen/SpikeInference-experiments/main/input_files/7.train.calcium.csv")
 calcium_1 <- read.csv(text = link_calcium)

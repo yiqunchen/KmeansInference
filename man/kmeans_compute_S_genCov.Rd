@@ -23,3 +23,4 @@ kmeans_compute_S_genCov(
 \description{
 Compute set S for isotropic case
 }
+\keyword{internal}

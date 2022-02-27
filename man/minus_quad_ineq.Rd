@@ -9,3 +9,4 @@ minus_quad_ineq(quad1, quad2)
 \description{
 Implement the minus operation for two quadratic inequalities
 }
+\keyword{internal}

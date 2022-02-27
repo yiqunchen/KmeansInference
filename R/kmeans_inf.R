@@ -1,8 +1,38 @@
-#' k means estimation
+#' Perform k-means clustering on a data matrix.
 #'
+#' @param X Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data
+#' @param k Integer; the number of clusters for k-means clustering
+#' @param iter.max Positive integer; 	the maximum number of iterations allowed in the k-means clustering (Lloyd's) algorithm.
+#' Default to \code{10}.
+#' @param seed Random seed for the initialization in k-means clustering algorithm.
+#'
+#' @details
+#' The data given by X are clustered by the k-means clustering,
+#' which aims to partition the points into k groups such that the sum of squares from points
+#' to the assigned cluster centers is minimized. In other words, the k-means clustering solves
+#' the following optimization problem
+#' \deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
+#'  \right\Vert_2^2 , }
+#'  subject the constraint that \eqn{\mathcal{C}_1,..., {\mathcal{C}_K}} forms a partition of the integers \eqn{1,..., n}.
+#' The algorithm from Lloyd (1957) (or sometimes, MacQueen (1967)) is used to produce a solution.
+#' @return Returns a list with the following elements:
+#' "cluster" = cluster_assign_list, "centers" = centroid_list,
+#' \itemize{
+#' \item \code{final_cluster} Estimated clusters via k-means clustering
+#' \item \code{centers} A matrix of the cluster centroids.
+#' \item \code{objective} The objective function at the final iteration of the k-means algorithm.
+#' \item \code{final_cluster}
+#' }
+#' @references
+#' Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.
+#' Published in 1982 in IEEE Transactions on Information Theory, 28, 128–137.
+#'
+#' MacQueen, J. (1967). Some methods for classification and analysis of multivariate observations.
+#' In Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability,
+#' pp. 281–297. Berkeley, CA: University of California Press.
 #' @export
-kmeans_estimation <- function(X, k, iter.max = 10, nstart = 1, seed = 1234,
-                              tol_eps = 1e-2, verbose=TRUE){
+kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
+                              tol_eps = 1e-4, verbose=TRUE){
 
   set.seed(seed)
   if(!is.matrix(X)) stop("X should be a matrix")
@@ -59,106 +89,104 @@ kmeans_estimation <- function(X, k, iter.max = 10, nstart = 1, seed = 1234,
 }
 
 
-# ----- main function to test equality of the means of two estimated connected components -----
+# ----- main function to test equality of the means of two estimated clusters via k-means clustering -----
 #' Testing for a difference in means between clusters of observations
 #' identified via k-means clustering.
 #'
 #' This functions tests the null hypothesis of no difference in means between
 #' two estimated clusters \code{cluster_1} and \code{cluster_2} of the output of the
 #' k means clustering solution obtained via the Lloyd's algorithm.
-#' The ordering are numbered as per the results of the \code{fusedlasso}
-#' function in the \code{genlasso} package.
+#' The ordering are numbered as per the results of the \code{kmeans_estimation}
+#' function in the \code{KmeansInference} package.
+#' @param X Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data
+#' @param k Integer; the number of clusters for k-means clustering
+#' @param cluster_1,cluster_2 Two different integers in {1,...,k}; two estimated clusters to test, as indexed by the results of
+#' \code{kmeans_estimation}.
+#' @param iso Boolean. If TRUE, an isotropic covariance matrix model is used.
+#' @param sig Numeric; noise standard deviation for the observed data, a non-negative number;
+#' relevant if \code{iso}=TRUE.
+#' @param SigInv Numeric matrix; optional \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma^{-1}}; relevant if \code{iso} is FALSE.
+#' @param iter.max Positive integer; 	the maximum number of iterations allowed in the k-means clustering algorithm. Default to \code{10}.
+#' @param seed Random seed for the initialization in k-means clustering algorithm.
+#' @param tol_eps A small number specifying the convergence criterion for the k-means clustering,
+#' default to \code{1e-6}.
 #'
-#'(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
-#iter.max = 10, nstart = 1,
-#seed = 1234)
-#' Input:
-#' @param y Numeric vector; \eqn{n} dimensional observed data
-#' @param D Numeric matrix; \eqn{m} by \eqn{n} penalty matrix, i.e.,
-#' the oriented incidence matrix over the underlying graph
-#' @param c1,c2 Integers selecting the two connected components to test, as indexed by the results of
-#' \code{genlasso::fusedlasso}.
-#' @param method One of "K" or "CC", which indicates which conditioning set to use
-#' @param sigma Numeric; noise standard deviation for the observed data, a non-negative number.
-#' @param K Integer; number of steps to run the dual-path algorithm.
-#' It must be specified if method=="K".
-#' @param L Integer; the targeted number of connected components.
-#' It must be specified if method=="CC".
-#' @param early_stop Numeric; specify when the truncation set computation
-#' should be terminated. The default is NULL, which indicates infinity.
-#' @param compute_ci Logical; the default is False. Specifying whether confidence intervals for \eqn{\nu^{T}\beta}, the
-#' difference in means between the two estimated connected components, should be computed.
-#' @param alpha_level Numeric; parameter for the 1-\code{alpha_level} confidence interval, defeault to 0.05
-#' @return Returns a list with elements:
+#' @return Returns a list with the following elements:
 #' \itemize{
-#' \item \code{pval} the p-value in Chen et al. (2021+)
-#' \item \code{truncation_set} the conditioning set of Chen et al. (2021+) stored as \code{Intervals} class
-#' \item \code{test_stats} test statistics: the difference in means of two connected components
-#' \item \code{beta_hat} Graph fused lasso estimates
-#' \item \code{connected_comp} Estimated connected component
-#' \item \code{Naive} the naive p-value using a z-test
-#' \item \code{Hyun} the p-value proposed in Hyun et al. (2018)
-#' \item \code{hyun_set} the conditioning set of  Hyun et al. (2018) stored as \code{Intervals} class
-#' \item \code{CI_result} confidence interval of level 1-\code{alpha_level} if \code{compute_ci=TRUE}
+#' \item \code{pval} the selective p-value \eqn{p_{k-means}} in Chen and Witten (2022+)
+#' \item \code{final_interval} the conditioning set of Chen and Witten (2022+), stored as the \code{Intervals} class
+#' \item \code{test_stats} test statistic: the difference in the empirical means of two estimated clusters
+#' \item \code{final_cluster} Estimated clusters via k-means clustering
 #' }
+#'
 #' @export
 #'
 #' @details
-#' Consider the generative model \eqn{Y_j = \beta_j + \epsilon_j, \epsilon_j \sim N(0, \sigma^2). j=1,...,n}, where
-#' the underlying signal \eqn{\beta} is assumed to be piecewise constant with respect to an underlying
-#' graph. The fused lasso estimate minimizes the following objective function
-#' \deqn{minimize_{\beta} \frac{1}{2} \sum_{j=1}^{n} ( y_j - \beta_j )^2 + \lambda \sum_{(i,j)\in E}|\beta_i-\beta_j|,}
-#' where E is the edge set of the underlying graph. The solution \eqn{\hat{\beta}} can then be
-#' segment into connected components; that is, the set of \eqn{\hat{\beta}} that takes on the
-#' same value, and are connected in the original graph.
-#'
-#' Now suppose we want to test whether the means of two estimated connected components \code{c1} and \code{c2}
-#' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \nu^T \beta = 0} versus
-#' \eqn{H_{1}:  \nu^T \beta \neq 0} for suitably chosen \eqn{\nu}.
+#' Consider the generative model \eqn{X \sim MN(\mu,I_n,\sigma^2 I_q)}, The k-means clustering
+#' solves the following optimization problem
+#' \deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
+#'  \right\Vert_2^2 , }
+#'  where \eqn{\mathcal{C}_1,..., {\mathcal{C}_K}} forms a partition of the integers \eqn{1,..., n}, and can be regarded as
+#'  the estimated clusters of the original observations. In practice, solutions to the optimization problem is
+#'  often obtained using iterative algorithms, e.g., the Lloyd's algorithm.
+#' Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
+#' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
+#' \eqn{H_{1}:   \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vectors \eqn{0_q}.
 #'
 #' This function computes the following p-value:
-#' \deqn{P(|\nu^T Y| \ge |\nu^T y| \; | \;  \hat{C}_1, \hat{C}_2 \in CC_K(Y),  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y),}
-#' where \eqn{CC_K(Y)} is the set of estimated connected components from applying K steps of the dual path algorithm on data Y
-#' , and \eqn{\Pi_\nu^\perp} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
-#' In particular, the test based on this p-value controls the selective Type I error and has higher power than an existing method
-#' by Hyun et al. (2018). Readers can refer to the Section 3 in Chen et al. (2021+) for more details.
-#'
+#' \deqn{P(|X^T \nu| \ge |x^T \nu| \; | \;
+#'  \left\{ \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} c_i^{(t)}\left(X\right) =
+#'  c_i^{(t)}\left(x)\right\},  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y),}
+#' where \eqn{c_i^{(t)}} is the is the cluster assigned to the \eqn{i}th observation at the \eqn{t}th iteration of
+#' the Lloyd's algorithm, and \eqn{\Pi_\nu^\perp} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
+#' In particular, the test based on this p-value controls the selective Type I error and has substantial power.
+#' Readers can refer to the Sections 2 and 4 in Chen and Witten (2022+) for more details.
 #' @examples
-#' lev1 <- 0 # mean for group 1
-#' lev2 <- 3 # mean (absolute value) for group 2/3
-#' sigma <- 1 # level of noise
-#' nn <- 8 # grid size
-#' Dmat <- genlasso::getD2d(nn, nn) # generate D matrix for the 2D fused lasso
-#' ### Create the underlying signal
-#' A <- matrix(lev1, ncol=nn, nrow = nn)
-#' A[1:round(nn/3),1:round(nn/3)] <- 1*lev2
-#' A[(nn-2):(nn),(nn-2):(nn)] <- -1*lev2
-#' ### Visualize the underlying signal
-#' lattice::levelplot(A)
-#' set.seed(2005)
-#' A.noisy <- A + rnorm(nn^2,mean=0,sd=sigma)
-#' y <- c(t(A.noisy))
-#' ### Now use the fusedlasso function to obtain estimated connected components after K=13
-#' ### steps of the dual path algorithm
-#' K = 13
-#' complete_sol <- genlasso::fusedlasso(y=y,D=Dmat,maxsteps=K)
-#' beta_hat <- complete_sol$beta[,K]
-#' ### estimated connected components
-#' estimated_CC <- complete_sol$pathobjs$i
-#' estimated_CC
-#' ### Run a test for a difference in means between estimated connected components 1 and 2
-#' result_demo <- fusedlasso_inf(y=y, D=Dmat, c1=1, c2=2, method="K", sigma=sigma, K=K)
-#' summary(result_demo)
-#'
-#' This tests the null hypothesis of no difference in means between clusters k1 and k2
-#' at level K in a hierarchical clustering. (The K clusters are numbered as per the
-#' results of the cutree function in the stats package.)
+#' library(KmeansInference)
+#' library(ggplot2)
+#' set.seed(2022)
+#' n <- 150
+#' true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
+#' delta <- 10
+#' q <- 2
+#' mu <- rbind(c(delta/2,rep(0,q-1)),
+#' c(rep(0,q-1), sqrt(3)*delta/2),
+#' c(-delta/2,rep(0,q-1)) )
+#' sig <- 1
+#' # Generate a matrix normal sample
+#' X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+#' # Visualize the data
+#' ggplot(data.frame(X), aes(x=X1, y=X2)) +
+#' geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+#'  theme_classic(base_size=18) + theme(legend.position="none") +
+#'  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+#'  theme(legend.title = element_blank(),
+#'  plot.title = element_text(hjust = 0.5))
+#'  k <- 3
+#'  # Run k-means clustering with K=3
+#'  estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2021)$final_cluster
+#'  table(true_clusters,estimated_clusters)
+#'  # Visualize the clusters
+#'  ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
+#'  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+#'  theme_classic(base_size=18) + theme(legend.position="none") +
+#'  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+#'  theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))
+#'  ### Run a test for a difference in means between estimated clusters 1 and 3
+#'  cluster_1 <- 1
+#'  cluster_2 <- 3
+#'  cl_1_2_inference_demo <- kmeans_inference(X, k=3, cluster_1, cluster_2,
+#'  sig=sig, iter.max = 20, seed = 2021)
+#'  summary(cl_1_2_inference_demo)
 #' @references
 #' Chen YT, Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint.
 #' https://arxiv.org/abs/xxxx.xxxxx.
-#' @export
-kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
-                             iter.max = 10, seed = 1234, nstart = 1,
+#' Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.
+#' Published in 1982 in IEEE Transactions on Information Theory, 28, 128–137.
+#'
+kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
+                                       iso=TRUE, sig=NULL, SigInv=NULL,
+                             iter.max = 10, seed = 1234,
                              tol_eps = 1e-6, verbose=TRUE){
 
   set.seed(seed)
@@ -172,13 +200,19 @@ kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
   if((!is.null(sig))&(!is.null(SigInv))){
     stop("Only one of variance and covariance matrix can be specified!")
   }
+  if ((iso)&(is.null(sig))){
+    stop("Specifying sig is needed when iso=TRUE!")
+  }
+  if (!(iso)&(is.null(SigInv))){
+    stop("Specifying SigInv is needed when iso=FALSE!")
+  }
   if((min(cluster_1,cluster_2)<1)|(max(cluster_1,cluster_2)>k)){
     stop("Cluster numbers must be between 1 and k!")
   }
   n <- dim(X)[1]
   p <- dim(X)[2]
   # get the list of all assigned clusters first
-  estimated_k_means <- kmeans_estimation(X, k, iter.max, nstart, seed, tol_eps, verbose)
+  estimated_k_means <- kmeans_estimation(X, k, iter.max, seed, tol_eps, verbose)
   # check if we get the desired number of clusters:
   if(length(unique(estimated_k_means$final_cluster))<k){
     stop("k-means clustering did not return the desired number of clusters! Try a different seed?")
@@ -204,6 +238,7 @@ kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
   XTv_norm <- norm_vec(diff_means)
   dir_XTv <- XTv/XTv_norm
 
+  p_naive <- NULL
   # compute test_stats in the isotropic case
   if(!is.null(sig)){
     test_stats <- XTv_norm
@@ -216,6 +251,8 @@ kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
                                            n, XTv, XTv_norm,
                                            dir_XTv, v_vec,
                                            v_norm, T_length, k)
+
+    p_naive <- multivariate_Z_test(X, estimated_final_cluster, cluster_1, cluster_2, sig)
   }
 
   # compute test_stats in the general cov case
@@ -233,81 +270,11 @@ kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
   }
 
 
-
-  #final_interval <- intervals::Intervals(c(-Inf,Inf))
-
-  # loop through the initialization
-  #init_list <- estimated_k_means$random_init_obs
-  #init_cluster <- all_T_clusters[1,]
-  # look at covariance matrices -- a different S needed to be computed
-  #for (i in c(1:n)){
-  #  current_j_prime <- init_cluster[i]
-  #  j_star_quad <- norm_sq_phi(XTv, XTv_norm, dir_XTv, v_norm, i,init_list[current_j_prime])
-  #  for (j in c(1:length(init_list))){
-  #    current_j_quad <- norm_sq_phi(XTv, XTv_norm, dir_XTv, v_norm,i,init_list[j])
-  #    curr_quad <- minus_quad_ineq(j_star_quad, current_j_quad)
-  #    curr_interval <- intervals::Intervals(solve_one_ineq(curr_quad$quad,
-  #                                                         curr_quad$linear, curr_quad$constant))
-  #    final_interval <- intervals::interval_intersection(final_interval, curr_interval)
-
-  #  }
-  #}
-
-  # loop through all sequence t
-  #if(T_length>1){
-  #for (l in c(1:(T_length-1))){
-   # current_cl <- all_T_clusters[(l+1),]
-  #  last_cl <- all_T_clusters[(l),]
-    # loop through all the observations
-   # for (i in c(1:n)){
-      # loop through all cluster classes
-    #  current_cl_i <- current_cl[i]
-      #
-     # k_star_quad <- norm_phi_canonical_kmeans(XTv, XTv_norm, dir_XTv, v_norm, last_cl, current_cl_i, v_vec, i) #i is the observation
-    #  for (j in c(1:k)){
-
-     #   k_current_quad <- norm_phi_canonical_kmeans(XTv, XTv_norm, dir_XTv, v_norm, last_cl, j, v_vec, i) #i is the observation
-    #    curr_quad <- minus_quad_ineq(k_star_quad, k_current_quad)
-    #    curr_interval <- intervals::Intervals(solve_one_ineq(curr_quad$quad,
-     #                                                        curr_quad$linear, curr_quad$constant))
-        # interval update
-     #   final_interval <- intervals::interval_intersection(final_interval, curr_interval)
-
-      #}
-  #  }
-  #}
-  #}
-
-  # final intervals look correct -- try to find truncation?
-  #final_interval_chisq <- intervals::interval_intersection(intervals::Intervals(c(0,Inf)),
-  #                                                         final_interval)
-
-  # compute test_stats in the isotropic case
-  #if(!is.null(sig)){
-    #test_stats <- norm_vec(diff_means)
-    #scale_factor <- squared_norm_nu*sig^2
-  #  gestat <- intervals::Intervals(c(test_stats^2/scale_factor, Inf))
-  #}
-
-  #if(!is.null(SigInv)){
-    #test_stats <- sqrt(as.numeric(t(diff_means)%*%SigInv%*%diff_means))
-    #scale_factor <- squared_norm_nu
-   #gestat <- intervals::Intervals(c(test_stats^2/scale_factor, Inf))
-  #}
-
   # improve numerical stability
   final_interval_chisq <- intervals::interval_union(final_interval_chisq,
                            intervals::Intervals_full(c(test_stats-(1e-09),test_stats+(1e-09))),
                            check_valid=FALSE)
 
-
-  # if (max(as.matrix(final_interval_chisq)[,2])<test_stats){
-  #   if(all.equal(max(as.matrix(final_interval_chisq)[,2]),test_stats)){
-  #     final_interval_chisq <- intervals::interval_union(final_interval_chisq,
-  #                              intervals::Intervals(c(max(final_interval_chisq[,2])
-  #                                                     ,test_stats+(1e-09))))
-  #   }
-  # }
 
   denom <- final_interval_chisq^2/scale_factor
 
@@ -317,12 +284,21 @@ kmeans_inference <- function(X, k, cluster_1, cluster_2, sig=NULL, SigInv=NULL,
   numer <- suppressWarnings(intervals::interval_intersection(gestat, denom))
   pval <- TChisqRatioApprox(p, numer, denom)
 
-  result_list <- list("estimated_k_means" = estimated_k_means, "final_interval"=final_interval_chisq,
-                      "final_cluster" = estimated_final_cluster, "test_stats"=test_stats,
-                      "sig" = sig, "scale_factor" = scale_factor, "pval" = pval)
+
+  result_list <- list("final_interval"=final_interval_chisq,
+                      "final_cluster" = estimated_final_cluster,
+                      "test_stats"=test_stats,
+                      "cluster_1" = cluster_1,
+                      "cluster_2" = cluster_2,
+                      "sig" = sig, "SigInv" = SigInv,
+                      "scale_factor" = scale_factor,
+                      "p_naive" = p_naive,
+                       "call" = match.call(),
+                      "pval" = pval)
+  class(result_list) <- "kmeans_inference"
   return(result_list)
 
-}
+})
 
 
 
