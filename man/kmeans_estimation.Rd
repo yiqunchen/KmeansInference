@@ -30,7 +30,6 @@ Returns a list with the following elements:
 \item \code{final_cluster} Estimated clusters via k-means clustering
 \item \code{centers} A matrix of the cluster centroids.
 \item \code{objective} The objective function at the final iteration of the k-means algorithm.
-\item \code{final_cluster}
 }
 }
 \description{
@@ -44,7 +43,39 @@ the following optimization problem
 \deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
  \right\Vert_2^2 , }
  subject the constraint that \eqn{\mathcal{C}_1,..., {\mathcal{C}_K}} forms a partition of the integers \eqn{1,..., n}.
-The algorithm from Lloyd (1957) (or sometimes, MacQueen (1967)) is used to produce a solution.
+The algorithm from Lloyd (1957) (also proposed in MacQueen (1967)) is used to produce a solution.
+}
+\examples{
+library(KmeansInference)
+library(ggplot2)
+set.seed(2022)
+n <- 150
+true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
+delta <- 10
+q <- 2
+mu <- rbind(c(delta/2,rep(0,q-1)),
+c(rep(0,q-1), sqrt(3)*delta/2),
+c(-delta/2,rep(0,q-1)) )
+sig <- 1
+# Generate a matrix normal sample
+X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+# Visualize the data
+ggplot(data.frame(X), aes(x=X1, y=X2)) +
+geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+ theme_classic(base_size=18) + theme(legend.position="none") +
+ scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+ theme(legend.title = element_blank(),
+ plot.title = element_text(hjust = 0.5))
+ k <- 3
+ # Run k-means clustering with K=3
+ estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2021)$final_cluster
+ table(true_clusters,estimated_clusters)
+ # Visualize the clusters
+ ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
+ geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+ theme_classic(base_size=18) + theme(legend.position="none") +
+ scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+ theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))
 }
 \references{
 Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.

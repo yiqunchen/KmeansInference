@@ -70,9 +70,9 @@ are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \
 \eqn{H_{1}:   \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vectors \eqn{0_q}.
 
 This function computes the following p-value:
-\deqn{P(|X^T \nu| \ge |x^T \nu| \; | \;
- \left\{ \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} c_i^{(t)}\left(X\right) =
- c_i^{(t)}\left(x)\right\},  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y),}
+\deqn{P \left( |X^T \nu| \ge |x^T \nu| \; | \;
+  \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \left\{ c_i^{(t)} \left( X \right) =
+ c_i^{(t)}\left( x \right) \right\},  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y \right),}
 where \eqn{c_i^{(t)}} is the is the cluster assigned to the \eqn{i}th observation at the \eqn{t}th iteration of
 the Lloyd's algorithm, and \eqn{\Pi_\nu^\perp} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
 In particular, the test based on this p-value controls the selective Type I error and has substantial power.
