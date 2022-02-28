@@ -4,27 +4,27 @@ navbar:
   structure:
     left:  [home, articles, tutorials, example, reference]
     right: [github]
-    
+
   components:
     articles:
       text: Technical details
       href: articles/technical_details.html
-    
+
     tutorials:
       text: Software tutorials
       href: articles/Tutorials.html
 
     example:
-      text: Real data example
+      text: Application to single-cell RNA-Seq data
       href: articles/real_data_example.html
-    
-    
-  
+
+
+
 # home:
 #   title: An R package for quantifying uncertatines for spikes estimated from calcium imaging data
 #   description: >
-#     Do you find yourself struggling with quantifying the uncertainty of your spikes estimated 
+#     Do you find yourself struggling with quantifying the uncertainty of your spikes estimated
 #     from calcium imaging data?
-#     If so, you might wanna check out this package to 
+#     If so, you might wanna check out this package to
 #     automatically estimate and obtain valid p-values of estimated from a popular method.
-#   
+#

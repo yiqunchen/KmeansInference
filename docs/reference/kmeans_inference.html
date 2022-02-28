@@ -99,7 +99,7 @@ function in the KmeansInference package." />
   <a href="../articles/Tutorials.html">Software tutorials</a>
 </li>
 <li>
-  <a href="../articles/real_data_example.html">Real data example</a>
+  <a href="../articles/real_data_example.html">Application to single-cell RNA-Seq data</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -214,7 +214,7 @@ Now suppose we want to test whether the means of two estimated clusters <code>cl
 are equal; or equivalently, the null hypothesis of the form \(H_{0}:  \mu^T \nu = 0_q\) versus
 \(H_{1}:   \mu^T \nu \neq 0_q\) for suitably chosen \(\nu\) and all-zero vectors \(0_q\).</p>
 <p>This function computes the following p-value:
-$$P \left( |X^T \nu| \ge |x^T \nu| \; | \;
+$$P \left( \left\Vert X^T \nu \right\Vert_2 \ge \left\Vert x^T \nu  \right\Vert_2 \; | \;
   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \left\{ c_i^{(t)} \left( X \right) =
  c_i^{(t)}\left( x \right) \right\},  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y \right),$$
 where \(c_i^{(t)}\) is the is the cluster assigned to the \(i\)th observation at the \(t\)th iteration of

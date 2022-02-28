@@ -82,32 +82,42 @@ multivariate_Z_test <- function(X, cluster_vec, k1, k2, sig) {
 #' @return A data frame with summarized results
 #' @export
 #' @examples
-#' lev1 <- 0 # mean for group 1
-#' lev2 <- 3 # mean (absolute value) for group 2/3
-#' sigma <- 1 # level of noise
-#' nn <- 8 # grid size
-#' Dmat <- genlasso::getD2d(nn, nn) # generate D matrix for the 2D fused lasso
-#' ### Create the underlying signal
-#' A <- matrix(lev1, ncol=nn, nrow = nn)
-#' A[1:round(nn/3),1:round(nn/3)] <- 1*lev2
-#' A[(nn-2):(nn),(nn-2):(nn)] <- -1*lev2
-#' ### Visualize the underlying signal
-#' lattice::levelplot(A)
-#' set.seed(2005)
-#' A.noisy <- A + rnorm(nn^2,mean=0,sd=sigma)
-#' y <- c(t(A.noisy))
-#' ### Now use the fusedlasso function to obtain estimated connected components after K=13
-#' ### steps of the dual path algorithm
-#' K = 13
-#' complete_sol <- genlasso::fusedlasso(y=y,D=Dmat,maxsteps=K)
-#' beta_hat <- complete_sol$beta[,K]
-#' ### estimated connected components
-#' estimated_CC <- complete_sol$pathobjs$i
-#' estimated_CC
-#' ### Run a test for a difference in means between estimated connected components 1 and 2
-#' result_demo <- fusedlasso_inf(y=y, D=Dmat, c1=1, c2=2, method="K",
-#' sigma=sigma, K=K, compute_ci=TRUE)
-#' summary(result_demo)
+#' library(KmeansInference)
+#' library(ggplot2)
+#' set.seed(2022)
+#' n <- 150
+#' true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
+#' delta <- 10
+#' q <- 2
+#' mu <- rbind(c(delta/2,rep(0,q-1)),
+#' c(rep(0,q-1), sqrt(3)*delta/2),
+#' c(-delta/2,rep(0,q-1)) )
+#' sig <- 1
+#' # Generate a matrix normal sample
+#' X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+#' # Visualize the data
+#' ggplot(data.frame(X), aes(x=X1, y=X2)) +
+#' geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+#'  theme_classic(base_size=18) + theme(legend.position="none") +
+#'  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+#'  theme(legend.title = element_blank(),
+#'  plot.title = element_text(hjust = 0.5))
+#'  k <- 3
+#'  # Run k-means clustering with K=3
+#'  estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2021)$final_cluster
+#'  table(true_clusters,estimated_clusters)
+#'  # Visualize the clusters
+#'  ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
+#'  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+#'  theme_classic(base_size=18) + theme(legend.position="none") +
+#'  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+#'  theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))
+#'  ### Run a test for a difference in means between estimated clusters 1 and 3
+#'  cluster_1 <- 1
+#'  cluster_2 <- 3
+#'  cl_1_2_inference_demo <- kmeans_inference(X, k=3, cluster_1, cluster_2,
+#'  sig=sig, iter.max = 20, seed = 2021)
+#'  summary(cl_1_2_inference_demo)
 summary.kmeans_inference <- function(object, ...){
   result <- data.frame(cluster_1 = object$cluster_1,
                        cluster_2 = object$cluster_2,

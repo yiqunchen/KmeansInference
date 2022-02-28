@@ -164,7 +164,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' \eqn{H_{1}:   \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vectors \eqn{0_q}.
 #'
 #' This function computes the following p-value:
-#' \deqn{P \left( |X^T \nu| \ge |x^T \nu| \; | \;
+#' \deqn{P \left( \left\Vert X^T \nu \right\Vert_2 \ge \left\Vert x^T \nu  \right\Vert_2 \; | \;
 #'   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \left\{ c_i^{(t)} \left( X \right) =
 #'  c_i^{(t)}\left( x \right) \right\},  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y \right),}
 #' where \eqn{c_i^{(t)}} is the is the cluster assigned to the \eqn{i}th observation at the \eqn{t}th iteration of

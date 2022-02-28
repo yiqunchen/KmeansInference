@@ -1,8 +1,8 @@
 ---
-title: "Application to single-cell RNA Seq data"
+title: "Application to single-cell RNA-Seq data"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Real data application}
+  %\VignetteIndexEntry{Application to single-cell RNA-Seq data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -13,12 +13,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this tutorial, we illustrate how to apply the functions in the `KmeansInference` package to a  collected initially in Chen et al. (2013). 
+In this tutorial, we illustrate how to apply the functions in the `KmeansInference` package to a dataset originally collected by Zheng et al. (2017). 
 
 First we load the package and read in data from GitHub:
 ```{r}
 library(KmeansInference)
-
 library(ggplot2)
 require(RCurl)
 require(latex2exp)
@@ -29,11 +28,19 @@ githubURL <- "https://github.com/thefactmachine/hex-binning-gis-data/raw/master/
 load(url(githubURL))
 ```
 
+
+
+
+
+
+
 ### References
 
-Chen T-W, Wardill TJ, Sun Y, Pulver SR, Renninger SL, Baohan A, Schreiter ER, Kerr RA, Orger MB, Jayaraman V, Looger LL, Svoboda K, Kim DS. Ultrasensitive fluorescent proteins for imaging neuronal activity. Nature. 2013;499(7458):295-300. doi:10.1038/nature12354
+Chen YT and Witten DM. (2022+) Selective inference for $k$-means clustering. arXiv preprint. https://arxiv.org/abs/xxxx.xxxxx.
 
-Chen YT, Jewell SW, Witten DM. (2021) Quantifying uncertainty in spikes estimated from calcium imaging data. [arXiv:2103.0781](https://arxiv.org/abs/2103.07818) [statME].
+Gao, L. L., Bien, J., and Witten, D. (2020). Selective inference for hierarchical clustering.  arXiv preprint. arXiv:2012.02936.
+
+Zheng, G. X. Y., Terry, J. M., Belgrader, P., Ryvkin, P., Bent, Z. W., Wilson, R., Ziraldo, S. B., Wheeler, T. D., McDermott, G. P., Zhu, J., Gregory, M. T., Shuga, J., Montesclaros, L., Underwood, J. G., Masquelier, D. A., Nishimura, S. Y., Schnall-Levin, M., Wyatt, P. W., Hindson, C. M., Bharadwaj, R., Wong, A., Ness, K. D., Beppu, L. W., Deeg, H. J., McFarland, C., Loeb, K. R., Valente, W. J., Ericson, N. G., Stevens, E. A., Radich, J. P., Mikkelsen, T. S., Hindson, B. J., and Bielas, J. H. (2017), “Massively parallel digital transcriptional profiling of single cells,” Nature Communications, 8, 14049. https://doi.org/10.1038/ncomms14049.
 
 
 
