@@ -15,7 +15,7 @@ navbar:
       href: articles/Tutorials.html
 
     example:
-      text: Application to single-cell RNA-Seq data
+      text: Application to single-cell RNA-seq data
       href: articles/real_data_example.html
 
 
