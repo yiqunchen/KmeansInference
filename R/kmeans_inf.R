@@ -143,7 +143,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #'
 #' @return Returns a list with the following elements:
 #' \itemize{
-#' \item \code{pval} the selective p-value \eqn{p_{k-means}} in Chen and Witten (2022+)
+#' \item \code{pval} the selective p-value \eqn{p_{selective}} in Chen and Witten (2022+)
 #' \item \code{final_interval} the conditioning set of Chen and Witten (2022+), stored as the \code{Intervals} class
 #' \item \code{test_stats} test statistic: the difference in the empirical means of two estimated clusters
 #' \item \code{final_cluster} Estimated clusters via k-means clustering

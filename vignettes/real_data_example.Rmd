@@ -2,7 +2,7 @@
 title: "Application to single-cell RNA-seq data"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Application to single-cell RNA-Seq data}
+  %\VignetteIndexEntry{Application to single-cell RNA-seq data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -207,7 +207,7 @@ final_cluster_pos <- current_kmeans_pos$cluster[[current_kmeans_pos$iter]]
 
 ggplot(umap_data_x2, aes(x=UMAP1, y=UMAP2, colour=as.factor(final_cluster_pos))) +
   geom_point() +
-  ggtitle("Five cell type admixture") +
+  ggtitle("Mixture of five cell types") +
   xlab("UMAP1") +
   ylab("UMAP2") +
   scale_colour_brewer(palette="Dark2", name="Estimated clusters",
@@ -229,7 +229,6 @@ result_tab <- table(final_cluster_pos, umap_data_x2$CellType)
 result_tab/rowSums(result_tab)
 ```
 
-## rewrite for positive examples
 In the code below, we computed the p-values $p_{\text{Naive}}$ and $p_{\text{selective}}$ for two estimated pairs of clusters (full results can be found in Section 6 of our paper). Both sets of $p$-values are extremely small on this dataset, which suggests that our $p$-value has substantial power to reject the null hypothesis when it does not hold. 
 
 ```{r}

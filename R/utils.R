@@ -122,7 +122,7 @@ summary.kmeans_inference <- function(object, ...){
   result <- data.frame(cluster_1 = object$cluster_1,
                        cluster_2 = object$cluster_2,
                        test_stats = object$test_stats,
-                       p_kmeans = object$pval,
+                       p_selective = object$pval,
                        p_naive = object$p_naive[['pval']])
   return(result)
 }

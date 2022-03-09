@@ -22,17 +22,17 @@ library(KmeansInference)
 library(ggplot2)
 ```
 
-We first generate data according to $\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
+We first generate data according to $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
 \begin{align}
 \label{eq:power_model}
-{\mu}_1 =\ldots = {\mu}_{50} = \begin{bmatrix}
+\boldsymbol{\mu}_1 =\ldots = \boldsymbol{\mu}_{50} = \begin{bmatrix}
 -\delta/2 \\ 0_{q-1}
-\end{bmatrix}, \; {\mu}_{51}=\ldots = {\mu}_{100} = \begin{bmatrix}
+\end{bmatrix}, \; {\boldsymbol\mu}_{51}=\ldots = \boldsymbol{\mu}_{100} = \begin{bmatrix}
  0_{q-1} \\ \sqrt{3}\delta/2
 \end{bmatrix} ,\;
-{\mu}_{101}=\ldots = {\mu}_{150} = \begin{bmatrix}
-\delta/2 \\ 0_{q-1}.
-\end{bmatrix}
+\boldsymbol{\mu}_{101}=\ldots = \boldsymbol{\mu}_{150} = \begin{bmatrix}
+\delta/2 \\ 0_{q-1}
+\end{bmatrix}.
 \end{align}
 Here, we can think of $\mathcal{C}_1 = \{1,\ldots,50\},\mathcal{C}_2 = \{51,\ldots,100\},\mathcal{C}_3 = \{101,\ldots,150\}$ as the ``true clusters''.
 In the figure below, we display one such simulation $\mathbf{x}\in\mathbb{R}^{100\times 2}$ with $\delta=10$. 
@@ -85,7 +85,7 @@ cl_1_2_inference_demo <- kmeans_inference(X, k=3, cluster_1, cluster_2,
 summary(cl_1_2_inference_demo)
 ```
 
-In the summary, we have the $\ell_2$ norm of the difference in means, i.e.,$\left\Vert \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{\mu}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{\mu}_i/|\hat{\mathcal{C}}_2| \right\Vert_2$  (`test_stats`), the Wald p-value (`p_naive`), and the selective $p$-value (`p_kmeans`). In this case, the test based on $p_{k-means}$ can easily reject this null hypothesis that the blue and pink clusters have the same mean ($p_{k-means}<0.001$).
+In the summary, we have the $\ell_2$ norm of the difference in means, i.e.,$\left\Vert \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{x}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{x}_i/|\hat{\mathcal{C}}_2| \right\Vert_2$  (`test_stats`), the Wald p-value (`p_naive`), and the selective $p$-value (`p_kmeans`). In this case, the test based on $p_{\text{selective}}$ can easily reject this null hypothesis that the blue and pink clusters have the same mean ($p_{\text{selective}}<0.001$).
 
 ### Inference for k-means clustering when the null hypothesis holds
 
@@ -103,7 +103,7 @@ ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(new_estimated_clusters))) +
 table(true_clusters,new_estimated_clusters)
 ```
 
-By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now $p_{k-means}$ yields a much more moderate $p$-value, and the test based on $p_{k-means}$ cannot reject the null hypothesis when it holds. By contrast, the Wald $p$-value is tiny and leads to an anti-conservative test.
+By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now $p_{\text{selective}}$ yields a much more moderate $p$-value, and the test based on $p_{\text{selective}}$ cannot reject the null hypothesis when it holds. By contrast, the Wald $p$-value is tiny and leads to an anti-conservative test.
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 cluster_1 <- 1

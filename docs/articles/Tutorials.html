@@ -20,6 +20,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -32,18 +34,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">KmeansInference</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../articles/technical_details.html">Technical details</a>
 </li>
@@ -67,7 +63,7 @@
 
       
 
-      </header><script src="Tutorials_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Software tutorials</h1>
@@ -83,60 +79,60 @@
 <p>In this tutorial, we demonstrate basic use of the <code>KmeansInference</code> package.</p>
 <p>First we load relevant packages:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">KmeansInference</span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span></code></pre></div>
-<p>We first generate data according to <span class="math inline">\(\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)\)</span> with <span class="math inline">\(n=150,q=2,\sigma=1,\)</span> and <span class="math display">\[\begin{align}
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">KmeansInference</span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></code></pre></div>
+<p>We first generate data according to <span class="math inline">\(\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)\)</span> with <span class="math inline">\(n=150,q=2,\sigma=1,\)</span> and <span class="math display">\[\begin{align}
 \label{eq:power_model}
-{\mu}_1 =\ldots = {\mu}_{50} = \begin{bmatrix}
+\boldsymbol{\mu}_1 =\ldots = \boldsymbol{\mu}_{50} = \begin{bmatrix}
 -\delta/2 \\ 0_{q-1}
-\end{bmatrix}, \; {\mu}_{51}=\ldots = {\mu}_{100} = \begin{bmatrix}
+\end{bmatrix}, \; {\boldsymbol\mu}_{51}=\ldots = \boldsymbol{\mu}_{100} = \begin{bmatrix}
  0_{q-1} \\ \sqrt{3}\delta/2
 \end{bmatrix} ,\;
-{\mu}_{101}=\ldots = {\mu}_{150} = \begin{bmatrix}
-\delta/2 \\ 0_{q-1}.
-\end{bmatrix}
+\boldsymbol{\mu}_{101}=\ldots = \boldsymbol{\mu}_{150} = \begin{bmatrix}
+\delta/2 \\ 0_{q-1}
+\end{bmatrix}.
 \end{align}\]</span> Here, we can think of <span class="math inline">\(\mathcal{C}_1 = \{1,\ldots,50\},\mathcal{C}_2 = \{51,\ldots,100\},\mathcal{C}_3 = \{101,\ldots,150\}\)</span> as the ``true clusters’’. In the figure below, we display one such simulation <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{100\times 2}\)</span> with <span class="math inline">\(\delta=10\)</span>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">2022</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2022</span><span class="op">)</span>
 <span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">150</span>
-<span class="va">true_clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">50</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">50</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span>
+<span class="va">true_clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">50</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">50</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span>
 <span class="va">delta</span> <span class="op">&lt;-</span> <span class="fl">10</span>
 <span class="va">q</span> <span class="op">&lt;-</span> <span class="fl">2</span>
-<span class="va">mu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">delta</span><span class="op">/</span><span class="fl">2</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">*</span><span class="va">delta</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">delta</span><span class="op">/</span><span class="fl">2</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">)</span>
+<span class="va">mu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">delta</span><span class="op">/</span><span class="fl">2</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">*</span><span class="va">delta</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">delta</span><span class="op">/</span><span class="fl">2</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">)</span>
 <span class="va">sig</span> <span class="op">&lt;-</span> <span class="fl">1</span>
-<span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">*</span><span class="va">q</span>, sd<span class="op">=</span><span class="va">sig</span><span class="op">)</span>, <span class="va">n</span>, <span class="va">q</span><span class="op">)</span> <span class="op">+</span> <span class="va">mu</span><span class="op">[</span><span class="va">true_clusters</span>, <span class="op">]</span>
+<span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">*</span><span class="va">q</span>, sd<span class="op">=</span><span class="va">sig</span><span class="op">)</span>, <span class="va">n</span>, <span class="va">q</span><span class="op">)</span> <span class="op">+</span> <span class="va">mu</span><span class="op">[</span><span class="va">true_clusters</span>, <span class="op">]</span>
 
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">X1</span>, y<span class="op">=</span><span class="va">X2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>cex<span class="op">=</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">xlab</a></span><span class="op">(</span><span class="st">"Feature 1"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ylab</a></span><span class="op">(</span><span class="st">"Feature 2"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span>base_size<span class="op">=</span><span class="fl">18</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_colour_manual</a></span><span class="op">(</span>values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"dodgerblue3"</span>, <span class="st">"rosybrown"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_blank</a></span><span class="op">(</span><span class="op">)</span>,
-        plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">X1</span>, y<span class="op">=</span><span class="va">X2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>cex<span class="op">=</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Feature 1"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Feature 2"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span>base_size<span class="op">=</span><span class="fl">18</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dodgerblue3"</span>, <span class="st">"rosybrown"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,
+        plot.title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="Tutorials_files/figure-html/unnamed-chunk-3-1.png" width="480" style="display: block; margin: auto;"></p>
-<div id="k-means-clustering-k3" class="section level3">
-<h3 class="hasAnchor">
-<a href="#k-means-clustering-k3" class="anchor"></a>k-means clustering (K=3)</h3>
+<div class="section level3">
+<h3 id="k-means-clustering-k3">k-means clustering (K=3)<a class="anchor" aria-label="anchor" href="#k-means-clustering-k3"></a>
+</h3>
 <p>In the code below, we call the <code>kmeans_estimation</code> function to estimate spikes using the Lloyd’s algorithm with <span class="math inline">\(K=3\)</span>. In the figure below, observations are colored by the clusters obtained via <span class="math inline">\(k\)</span>-means clustering with <span class="math inline">\(K=3\)</span>. In this case, <span class="math inline">\(k\)</span>-means recovers the true clusters perfectly.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">k</span> <span class="op">&lt;-</span> <span class="fl">3</span>
 <span class="va">estimated_clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kmeans_estimation.html">kmeans_estimation</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">k</span>,iter.max <span class="op">=</span> <span class="fl">20</span>,seed <span class="op">=</span> <span class="fl">2021</span><span class="op">)</span><span class="op">$</span><span class="va">final_cluster</span>
-<span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">true_clusters</span>,<span class="va">estimated_clusters</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">true_clusters</span>,<span class="va">estimated_clusters</span><span class="op">)</span>
 <span class="co">#&gt;              estimated_clusters</span>
 <span class="co">#&gt; true_clusters  1  2  3</span>
 <span class="co">#&gt;             1  0 50  0</span>
 <span class="co">#&gt;             2  0  0 50</span>
 <span class="co">#&gt;             3 50  0  0</span>
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">X1</span>, y<span class="op">=</span><span class="va">X2</span>, col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">estimated_clusters</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>cex<span class="op">=</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">xlab</a></span><span class="op">(</span><span class="st">"Feature 1"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ylab</a></span><span class="op">(</span><span class="st">"Feature 2"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span>base_size<span class="op">=</span><span class="fl">18</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_colour_manual</a></span><span class="op">(</span>values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"dodgerblue3"</span>, <span class="st">"rosybrown"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_blank</a></span><span class="op">(</span><span class="op">)</span>,
-        plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">X1</span>, y<span class="op">=</span><span class="va">X2</span>, col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">estimated_clusters</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>cex<span class="op">=</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Feature 1"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Feature 2"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span>base_size<span class="op">=</span><span class="fl">18</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dodgerblue3"</span>, <span class="st">"rosybrown"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,
+        plot.title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="Tutorials_files/figure-html/unnamed-chunk-4-1.png" width="480" style="display: block; margin: auto;"></p>
 </div>
-<div id="inference-for-k-means-clustering-k3" class="section level3">
-<h3 class="hasAnchor">
-<a href="#inference-for-k-means-clustering-k3" class="anchor"></a>Inference for k-means clustering (K=3)</h3>
+<div class="section level3">
+<h3 id="inference-for-k-means-clustering-k3">Inference for k-means clustering (K=3)<a class="anchor" aria-label="anchor" href="#inference-for-k-means-clustering-k3"></a>
+</h3>
 <p>In this section, we demonstrate how to use our software to obtain <span class="math inline">\(p\)</span>-values for testing for a difference in means between clusters of observations identified via <span class="math inline">\(k\)</span>-means clustering. As an example, consider testing for a difference in means between the blue cluster (labeled as 1 in <code>estimated_clusters</code>) and the pink cluster (labeled as 3 in <code>estimated_clusters</code>).</p>
 <p>The code below demonstrates how to use the function <code>kmeans_inference</code>, which performs inference on the specified two estimated clusters. After obtaining the inferential result, we call the summary method to get a summary of the results, in the form of a data frame.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -144,41 +140,41 @@
 <span class="va">cluster_2</span> <span class="op">&lt;-</span> <span class="fl">3</span>
 <span class="va">cl_1_2_inference_demo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kmeans_inference.html">kmeans_inference</a></span><span class="op">(</span><span class="va">X</span>, k<span class="op">=</span><span class="fl">3</span>, <span class="va">cluster_1</span>, <span class="va">cluster_2</span>,
                                           sig<span class="op">=</span><span class="va">sig</span>, iter.max <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">2021</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">cl_1_2_inference_demo</span><span class="op">)</span>
-<span class="co">#&gt;   cluster_1 cluster_2 test_stats     p_kmeans p_naive</span>
+<span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_1_2_inference_demo</span><span class="op">)</span>
+<span class="co">#&gt;   cluster_1 cluster_2 test_stats  p_selective p_naive</span>
 <span class="co">#&gt; 1         1         3   10.44088 4.473563e-15       0</span></code></pre></div>
-<p>In the summary, we have the <span class="math inline">\(\ell_2\)</span> norm of the difference in means, i.e.,<span class="math inline">\(\left\Vert \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{\mu}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{\mu}_i/|\hat{\mathcal{C}}_2| \right\Vert_2\)</span> (<code>test_stats</code>), the Wald p-value (<code>p_naive</code>), and the selective <span class="math inline">\(p\)</span>-value (<code>p_kmeans</code>). In this case, the test based on <span class="math inline">\(p_{k-means}\)</span> can easily reject this null hypothesis that the blue and pink clusters have the same mean (<span class="math inline">\(p_{k-means}&lt;0.001\)</span>).</p>
+<p>In the summary, we have the <span class="math inline">\(\ell_2\)</span> norm of the difference in means, i.e.,<span class="math inline">\(\left\Vert \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{x}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{x}_i/|\hat{\mathcal{C}}_2| \right\Vert_2\)</span> (<code>test_stats</code>), the Wald p-value (<code>p_naive</code>), and the selective <span class="math inline">\(p\)</span>-value (<code>p_kmeans</code>). In this case, the test based on <span class="math inline">\(p_{\text{selective}}\)</span> can easily reject this null hypothesis that the blue and pink clusters have the same mean (<span class="math inline">\(p_{\text{selective}}&lt;0.001\)</span>).</p>
 </div>
-<div id="inference-for-k-means-clustering-when-the-null-hypothesis-holds" class="section level3">
-<h3 class="hasAnchor">
-<a href="#inference-for-k-means-clustering-when-the-null-hypothesis-holds" class="anchor"></a>Inference for k-means clustering when the null hypothesis holds</h3>
+<div class="section level3">
+<h3 id="inference-for-k-means-clustering-when-the-null-hypothesis-holds">Inference for k-means clustering when the null hypothesis holds<a class="anchor" aria-label="anchor" href="#inference-for-k-means-clustering-when-the-null-hypothesis-holds"></a>
+</h3>
 <p>In this section, we demonstrate that our proposed <span class="math inline">\(p\)</span>-value yields reasonable results when the null hypothesis does hold. Consider the same data as before, and we apply the <span class="math inline">\(k\)</span>-means clustering with <span class="math inline">\(K=4\)</span> to obtain four estimated clusters.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">k_new</span> <span class="op">&lt;-</span> <span class="fl">4</span>
 <span class="va">new_estimated_clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kmeans_estimation.html">kmeans_estimation</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">k_new</span>, iter.max <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">2021</span><span class="op">)</span><span class="op">$</span><span class="va">final_cluster</span>
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">X1</span>, y<span class="op">=</span><span class="va">X2</span>, col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">new_estimated_clusters</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>cex<span class="op">=</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">xlab</a></span><span class="op">(</span><span class="st">"Feature 1"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ylab</a></span><span class="op">(</span><span class="st">"Feature 2"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_classic</a></span><span class="op">(</span>base_size<span class="op">=</span><span class="fl">18</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_colour_manual</a></span><span class="op">(</span>values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"dodgerblue3"</span>, <span class="st">"rosybrown"</span>, <span class="st">"orange"</span>,<span class="st">"grey"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_blank</a></span><span class="op">(</span><span class="op">)</span>,
-        plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">X1</span>, y<span class="op">=</span><span class="va">X2</span>, col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">new_estimated_clusters</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>cex<span class="op">=</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Feature 1"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Feature 2"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span>base_size<span class="op">=</span><span class="fl">18</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dodgerblue3"</span>, <span class="st">"rosybrown"</span>, <span class="st">"orange"</span>,<span class="st">"grey"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,
+        plot.title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/ggplot2/man/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="Tutorials_files/figure-html/unnamed-chunk-6-1.png" width="480" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">true_clusters</span>,<span class="va">new_estimated_clusters</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">true_clusters</span>,<span class="va">new_estimated_clusters</span><span class="op">)</span>
 <span class="co">#&gt;              new_estimated_clusters</span>
 <span class="co">#&gt; true_clusters  1  2  3  4</span>
 <span class="co">#&gt;             1  0 50  0  0</span>
 <span class="co">#&gt;             2  0  0 50  0</span>
 <span class="co">#&gt;             3 25  0  0 25</span></code></pre></div>
-<p>By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now <span class="math inline">\(p_{k-means}\)</span> yields a much more moderate <span class="math inline">\(p\)</span>-value, and the test based on <span class="math inline">\(p_{k-means}\)</span> cannot reject the null hypothesis when it holds. By contrast, the Wald <span class="math inline">\(p\)</span>-value is tiny and leads to an anti-conservative test.</p>
+<p>By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now <span class="math inline">\(p_{\text{selective}}\)</span> yields a much more moderate <span class="math inline">\(p\)</span>-value, and the test based on <span class="math inline">\(p_{\text{selective}}\)</span> cannot reject the null hypothesis when it holds. By contrast, the Wald <span class="math inline">\(p\)</span>-value is tiny and leads to an anti-conservative test.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">cluster_1</span> <span class="op">&lt;-</span> <span class="fl">1</span>
 <span class="va">cluster_2</span> <span class="op">&lt;-</span> <span class="fl">4</span>
 <span class="va">cl_1_4_inference_demo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kmeans_inference.html">kmeans_inference</a></span><span class="op">(</span><span class="va">X</span>, k<span class="op">=</span><span class="fl">4</span>, <span class="va">cluster_1</span>, <span class="va">cluster_2</span>,
                                           sig<span class="op">=</span><span class="va">sig</span>, iter.max <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">2021</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">cl_1_4_inference_demo</span><span class="op">)</span>
-<span class="co">#&gt;   cluster_1 cluster_2 test_stats  p_kmeans      p_naive</span>
-<span class="co">#&gt; 1         1         4   1.581161 0.7223823 1.636657e-07</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_1_4_inference_demo</span><span class="op">)</span>
+<span class="co">#&gt;   cluster_1 cluster_2 test_stats p_selective      p_naive</span>
+<span class="co">#&gt; 1         1         4   1.581161   0.7223823 1.636657e-07</span></code></pre></div>
 </div>
   </div>
 
@@ -191,11 +187,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Yiqun Chen.</p>
+  <p></p>
+<p>Developed by Yiqun Chen.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.9000.</p>
 </div>
 
       </footer>
@@ -203,6 +201,8 @@
 
   
 
+
+  
 
   </body>
 </html>

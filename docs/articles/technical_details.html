@@ -20,6 +20,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -32,18 +34,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">KmeansInference</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../articles/technical_details.html">Technical details</a>
 </li>
@@ -67,7 +63,7 @@
 
       
 
-      </header><script src="technical_details_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Technical details</h1>
@@ -81,64 +77,64 @@
     
     
 <center>
-<img src="../man/figures/figure_1_a.png" style="width:30.0%"><img src="../man/figures/figure_1_b.png" style="width:30.0%"><img src="../man/figures/figure_1_c.png" style="width:30.0%"><figcaption>
+<img src="../reference/figures/figure_1_a.png" style="width:30.0%"><img src="../reference/figures/figure_1_b.png" style="width:30.0%"><img src="../reference/figures/figure_1_c.png" style="width:30.0%"><figcaption>
 Figure 1: (a): One simulated dataset generated according to <span class="math inline">\(\mathcal{MN}_{100\times 2}(\textbf{0}_{100\times 2}, \textbf{I}_{100}, \sigma^2 \textbf{I}_{2})\)</span>. We apply <span class="math inline">\(k\)</span>-means clustering to obtain three clusters. The cluster centroids are displayed as triangles. (b): Quantile-quantile plot of the Wald p-values applied to 2,000 simulated datasets from <span class="math inline">\(\mathcal{MN}_{100\times 2}(\textbf{0}_{100\times 2}, \textbf{I}_{100}, \sigma^2 \textbf{I}_{2})\)</span>. (c): Quantile-quantile plot of our proposed p-values applied to the same simulated datasets as in (b).
 </figcaption>
 </center>
-<div id="overview" class="section level3">
-<h3 class="hasAnchor">
-<a href="#overview" class="anchor"></a>Overview</h3>
+<div class="section level3">
+<h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h3>
 <p>We consider the problem of testing for a difference in means between clusters of observations identified via <span class="math inline">\(k\)</span>-means clustering, an extremely popular clustering algorithm with numerous applications. In this setting, classical hypothesis tests lead to an inflated Type I error rate, because the clusters were obtained on the same data used for testing. To overcome this problem, we propose a selective inference approach in our manuscript and describe an efficient algorithm to compute a finite-sample p-value that controls the selective Type I error for a test of the difference in means between a pair of clusters obtained using <span class="math inline">\(k\)</span>-means clustering.</p>
 <p>In this tutorial, we provide an overview of our selective inference approach. Details for the computationally-efficient implementation of our proposed p-value can be found in Section 3 of our manuscript, available at arXiv_link_here.</p>
 </div>
-<div id="model-setup" class="section level3">
-<h3 class="hasAnchor">
-<a href="#model-setup" class="anchor"></a>Model setup</h3>
-<p>We consider the following simple and well-studied model for <span class="math inline">\(n\)</span> observations and <span class="math inline">\(q\)</span> features: <span class="math display">\[\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q),\]</span> where <span class="math inline">\(\mu \in \mathbb{R}^{n\times q}\)</span> has unknown rows <span class="math inline">\(\mu_i\)</span>, and <span class="math inline">\(\sigma^2 &gt; 0\)</span> is unknown. This is equivalent of positing that <span class="math inline">\(X_i\sim_{ind.} \mathcal{N}(\mu_i,\sigma^2 \textbf{I}_q)\)</span>. In addition, we use <span class="math inline">\(x\)</span> to denote a realization of the data generating model <span class="math inline">\(\mathbf{X}\)</span>.</p>
+<div class="section level3">
+<h3 id="model-setup">Model setup<a class="anchor" aria-label="anchor" href="#model-setup"></a>
+</h3>
+<p>We consider the following simple and well-studied model for <span class="math inline">\(n\)</span> observations and <span class="math inline">\(q\)</span> features: <span class="math display">\[\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q),\]</span> where <span class="math inline">\(\boldsymbol{\mu} \in \mathbb{R}^{n\times q}\)</span> has unknown rows <span class="math inline">\(\boldsymbol{\mu}_i\)</span>, and <span class="math inline">\(\sigma^2 &gt; 0\)</span> is unknown. This is equivalent to positing that <span class="math inline">\(X_i\sim_{ind.} \mathcal{N}(\boldsymbol{\mu}_i,\sigma^2 \textbf{I}_q)\)</span>. In addition, we use <span class="math inline">\(\mathbf{x}\)</span> to denote a realization of the data generating model <span class="math inline">\(\mathbf{X}\)</span>.</p>
 </div>
-<div id="k-means-clustering" class="section level3">
-<h3 class="hasAnchor">
-<a href="#k-means-clustering" class="anchor"></a>k-means clustering</h3>
+<div class="section level3">
+<h3 id="k-means-clustering">k-means clustering<a class="anchor" aria-label="anchor" href="#k-means-clustering"></a>
+</h3>
 <p>Given samples <span class="math inline">\(x_1,\ldots,x_n \in \mathbb{R}^q\)</span>, and a positive integer <span class="math inline">\(K\)</span>, <span class="math inline">\(k\)</span>-means clustering partitions the <span class="math inline">\(n\)</span> samples into disjoint subsets <span class="math inline">\(\hat{\mathcal{C}}_1,\ldots,\hat{\mathcal{C}}_K\)</span> by solving the following optimization problem: <span class="math display">\[\begin{align}
 &amp;\underset{\mathcal{C}_1,\ldots,\mathcal{C}_K}{\text{minimize}}\;\left\{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}  \right\Vert_2^2 \right\} \\
   &amp;\text{subject to} \;
  \bigcup_{k=1}^K \mathcal{C}_k = \{1,\ldots, n\},\mathcal{C}_k\cap \mathcal{C}_{k'} = \emptyset ,\forall k\neq k'.
 \end{align}\]</span> It is not typically possible to solve for the global optimum for this optimization problem. In practice, a number of algorithms are available to find a local optimum; one popular approach is Lloyd’s algorithm. We first sample K out of n observations as initial centroids (step 1 in Algorithm 1). We then assign each observation to the closest centroid (step 2 in Algorithm 1). Next, we iterate between re-computing the centroids and updating the cluster assignments (steps 3a. and 3b. in Algorithm 1) until the cluster assignments stop changing. The algorithm is guaranteed to converge to a local optimum.</p>
 <center>
-<img src="../man/figures/screenshot_lloyds.png" style="width:90.0%">
+<img src="../reference/figures/screenshot_lloyds.png" style="width:90.0%">
 </center>
 </div>
-<div id="inference-for-the-difference-in-means-between-two-estimated-clusters" class="section level3">
-<h3 class="hasAnchor">
-<a href="#inference-for-the-difference-in-means-between-two-estimated-clusters" class="anchor"></a>Inference for the difference in means between two estimated clusters</h3>
-<p>After applying the <span class="math inline">\(k\)</span>-means clustering algorithm to obtain <span class="math inline">\(\mathcal{C}(x)\)</span>, a partition of the samples <span class="math inline">\(\{1,\ldots,n\}\)</span>, we might then consider testing the null hypothesis that the true mean is the same across two <em>estimated</em> clusters, i.e., <span class="math display">\[   H_0: \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{\mu}_i/|\hat{\mathcal{C}}_1| = \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{\mu}_i/|\hat{\mathcal{C}}_2|   \mbox{ versus }  H_1: \sum_{i\in \hat{\mathcal{C}}_1}\mathbf{\mu}_i/|\hat{\mathcal{C}}_1| \neq \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{\mu}_i/|\hat{\mathcal{C}}_2|,
-\]</span> where <span class="math inline">\(\hat{\mathcal{C}}_1,\hat{\mathcal{C}}_2 \in \mathcal{C}(\mathbf{x})\)</span> are estimated clusters with cardinalities <span class="math inline">\(|\hat{\mathcal{C}}_1|\)</span> and <span class="math inline">\(|\hat{\mathcal{C}}_2|\)</span>. This is equivalent to testing <span class="math inline">\(H_0: {\mu}^\top \nu = {0}_q \mbox{ versus } H_1: {\mu}^\top \nu \neq {0}_q\)</span>, <span class="math display">\[\begin{align}
+<div class="section level3">
+<h3 id="inference-for-the-difference-in-means-between-two-estimated-clusters">Inference for the difference in means between two estimated clusters<a class="anchor" aria-label="anchor" href="#inference-for-the-difference-in-means-between-two-estimated-clusters"></a>
+</h3>
+<p>After applying the <span class="math inline">\(k\)</span>-means clustering algorithm to obtain <span class="math inline">\(\mathcal{C}(x)\)</span>, a partition of the samples <span class="math inline">\(\{1,\ldots,n\}\)</span>, we might then consider testing the null hypothesis that the true mean is the same across two <em>estimated</em> clusters, i.e., <span class="math display">\[   H_0: \sum_{i\in {\hat{\mathcal{C}}}_1}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_1| = \sum_{i\in \hat{\mathcal{C}}_2}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_2|   \mbox{ versus }  H_1: \sum_{i\in \hat{\mathcal{C}}_1}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_1| \neq \sum_{i\in \hat{\mathcal{C}}_2}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_2|,
+\]</span> where <span class="math inline">\(\hat{\mathcal{C}}_1,\hat{\mathcal{C}}_2 \in \mathcal{C}(\mathbf{x})\)</span> are estimated clusters with cardinalities <span class="math inline">\(|\hat{\mathcal{C}}_1|\)</span> and <span class="math inline">\(|\hat{\mathcal{C}}_2|\)</span>. This is equivalent to testing <span class="math inline">\(H_0: \boldsymbol{\mu}^\top \nu = {0}_q \mbox{ versus } H_1: \boldsymbol{\mu}^\top \nu \neq {0}_q\)</span>, where <span class="math display">\[\begin{align}
     \nu_i = 1\{i\in\hat{\mathcal{C}}_1\}/|\hat{\mathcal{C}}_1| - 1\{i\in\hat{\mathcal{C}}_2\}/|\hat{\mathcal{C}}_2|, \quad i = 1,\ldots, n,
 \end{align}\]</span> and <span class="math inline">\(1\{A\}\)</span> is an indicator function that equals to 1 if the event <span class="math inline">\(A\)</span> holds, and 0 otherwise.</p>
 <p>This results in a challenging problem because we need to account for the clustering process that led us to test this very hypothesis! Drawing from the selective inference literature, we tackle this problem by proposing the following <span class="math inline">\(p\)</span>-value: <span class="math display">\[\begin{align} 
- p_{\text{selective}} = \mathbb{P}_{H_0}\left( \Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2 \;\middle\vert\;   \bigcap_{t=0}^{T}\bigcap_{i=1}^{n}\left\{c_i^{(t)}\left(\mathbf{X}\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\},\,\Pi_{\nu}^\perp \mathbf{X} = \Pi_{\nu}^\perp \mathbf{x},\, \text{dir}(\mathbf{X}^{\top}\nu) =  \text{dir}(\mathbf{x}^{\top}\nu)\right),
-\end{align}\]</span> where <span class="math inline">\(c_i^{(t)}\left(\mathbf{X}\right)\)</span> is the cluster assigned to the <span class="math inline">\(i\)</span>th observation at the <span class="math inline">\(t\)</span>th iteration of Algorithm 1 and <span class="math inline">\(\Pi_{\nu}^{\perp}\)</span> is an orthogonal projection matrix used to eliminate nuisance parameters. For a non-zero vector <span class="math inline">\(w\)</span>, <span class="math inline">\(\text{dir}(w) = w/\Vert w\Vert_2\)</span> is the unit vector along the direction of <span class="math inline">\(w\)</span>. We show that this <span class="math inline">\(p\)</span>-value for testing <span class="math inline">\(H_0\)</span> can be written as <span class="math display">\[
+ p_{\text{selective}} = \mathbb{P}_{H_0}\left( \Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2 \;\middle\vert\;   \bigcap_{t=0}^{T}\bigcap_{i=1}^{n}\left\{c_i^{(t)}\left(\mathbf{X}\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\},\,\boldsymbol{\Pi}_{\nu}^\perp \mathbf{X} = \boldsymbol{\Pi}_{\nu}^\perp \mathbf{x},\, \text{dir}(\mathbf{X}^{\top}\nu) =  \text{dir}(\mathbf{x}^{\top}\nu)\right),
+\end{align}\]</span> where <span class="math inline">\(c_i^{(t)}\left(\mathbf{X}\right)\)</span> is the cluster assigned to the <span class="math inline">\(i\)</span>th observation at the <span class="math inline">\(t\)</span>th iteration of Algorithm 1 and <span class="math inline">\(\boldsymbol{\Pi}_{\nu}^{\perp}\)</span> is an orthogonal projection matrix used to eliminate nuisance parameters. For a non-zero vector <span class="math inline">\(w\)</span>, <span class="math inline">\(\text{dir}(w) = w/\Vert w\Vert_2\)</span> is the unit vector along the direction of <span class="math inline">\(w\)</span>. We show that this <span class="math inline">\(p\)</span>-value for testing <span class="math inline">\(H_0\)</span> can be written as <span class="math display">\[
 p_{\text{selective}} = \mathbb{P}\left(  \phi \geq \Vert\mathbf{x}^\top \nu \Vert_2 \;\middle\vert\; \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left(\mathbf{x}'(\phi)\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\}   \right),
 \]</span> where <span class="math inline">\(\phi\sim (\sigma\Vert\nu\Vert_2)\cdot\chi_q\)</span> is a scaled <span class="math inline">\(\chi\)</span> distribution with degrees of freedom <span class="math inline">\(q\)</span>, and <span class="math inline">\(\mathbf{x}'(\phi) = x + \left( \frac{\phi-\Vert \mathbf{x}^{\top}\nu \Vert_2 }{\Vert \nu \Vert_2^2 }\right) \cdot \nu \left({\text{dir}}(\mathbf{x}^{\top}\nu)\right)^{\top}\)</span> can be thought of as a perturbation of the observed data <span class="math inline">\(x\)</span>, along the direction of <span class="math inline">\(\mathbf{x}^{\top}\nu\)</span>.</p>
-<p>Moreover, if we let <span class="math inline">\(\mathcal{S}_T\)</span> denote <span class="math inline">\(\left\{ \phi\geq0: \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left(\mathbf{x}'(\phi)\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\} \right\}\)</span>, then <span class="math inline">\(p_{\text{selective}}\)</span> can be rewritten as <span class="math inline">\(\mathbb{P}\left( \phi \geq \Vert\mathbf{x}^\top \nu \Vert_2 \;\middle\vert\; \phi\in \mathcal{S}_T \right)\)</span>. Therefore, it suffices to characterize the set <span class="math inline">\(\mathcal{S}_{T}\)</span>, because $;; _T $ will follow a truncated <span class="math inline">\(\chi\)</span> distribution.</p>
+<p>Moreover, if we let <span class="math inline">\(\mathcal{S}_T\)</span> denote <span class="math inline">\(\left\{ \phi\geq0: \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left(\mathbf{x}'(\phi)\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\} \right\}\)</span>, then <span class="math inline">\(p_{\text{selective}}\)</span> can be rewritten as <span class="math inline">\(\mathbb{P}\left( \phi \geq \Vert\mathbf{x}^\top \nu \Vert_2 \;\middle\vert\; \phi\in \mathcal{S}_T \right)\)</span>. Therefore, it suffices to characterize the set <span class="math inline">\(\mathcal{S}_{T}\)</span>, because <span class="math inline">\(\phi | \phi \in \mathcal{S}_{T}\)</span> will follow a truncated <span class="math inline">\(\chi_q\)</span> distribution.</p>
 <p>Our software implements an efficient calculation of this <span class="math inline">\(p\)</span>-value by analytically characterizing the set <span class="math inline">\(\mathcal{S}_T\)</span>. Our key insight is that the set <span class="math inline">\(\mathcal{S}_T\)</span> can be expressed as the intersection of solutions to <span class="math inline">\(\mathcal{O}(nKT)\)</span> quadratic inequalities of <span class="math inline">\(\phi\)</span>, where <span class="math inline">\(n,K,\)</span> and <span class="math inline">\(T\)</span> are the number of observations, the number of estimated clusters, and the number of iterations of Algorithm 1, respectively. The test based on the resulting <span class="math inline">\(p\)</span>-value will control the selective Type I error, in the sense of Lee et al. (2016) and Fithian et al. (2014); see also Figure 1(c) of this tutorial. Additional details can be found in Sections 2 and 3 of our paper (Chen and Witten 2022+)).</p>
 <p>Remark: by contrast, the Wald <span class="math inline">\(p\)</span>-value takes the form <span class="math display">\[
-\mathbb{P}(\Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2),
+p_{\text{Naive}} = \mathbb{P}(\Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2),
 \]</span> which ignores the fact that the contrast vector <span class="math inline">\(\nu\)</span> is estimated from the data via <span class="math inline">\(k\)</span>-means clustering, and therefore leads to a test with an inflated Type I error.</p>
 </div>
-<div id="extensions" class="section level3">
-<h3 class="hasAnchor">
-<a href="#extensions" class="anchor"></a>Extensions</h3>
+<div class="section level3">
+<h3 id="extensions">Extensions<a class="anchor" aria-label="anchor" href="#extensions"></a>
+</h3>
 <p>Our software also allows for the following extensions:</p>
 <ol style="list-style-type: decimal">
-<li>Allow for inference with unknown <span class="math inline">\(\sigma\)</span>, i.e., where <span class="math inline">\(\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)\)</span> with <em>unknown</em> <span class="math inline">\(\sigma\)</span>.</li>
-<li>Allow for inference with a known, positive-definite covariance matrix <span class="math inline">\(\Sigma\)</span>, i.e., where <span class="math inline">\(\mathbf{X} \sim \mathcal{MN}_{n\times q}({\mu}, \textbf{I}_n, \Sigma)\)</span>.</li>
+<li>Allow for inference with unknown <span class="math inline">\(\sigma\)</span>, i.e., where <span class="math inline">\(\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)\)</span> with <em>unknown</em> <span class="math inline">\(\sigma\)</span>.</li>
+<li>Allow for inference with a known, positive-definite covariance matrix <span class="math inline">\(\boldsymbol{\Sigma}\)</span>, i.e., where <span class="math inline">\(\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \boldsymbol{\Sigma})\)</span>.</li>
 </ol>
 </div>
-<div id="references" class="section level3">
-<h3 class="hasAnchor">
-<a href="#references" class="anchor"></a>References</h3>
-<p>Chen YT and Witten DM. (2022+) Selective inference for <span class="math inline">\(k\)</span>-means clustering. arXiv preprint. <a href="https://arxiv.org/abs/xxxx.xxxxx" class="uri">https://arxiv.org/abs/xxxx.xxxxx</a>.</p>
+<div class="section level3">
+<h3 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h3>
+<p>Chen YT and Witten DM. (2022+) Selective inference for <span class="math inline">\(k\)</span>-means clustering. arXiv preprint. <a href="https://arxiv.org/abs/xxxx.xxxxx" class="external-link uri">https://arxiv.org/abs/xxxx.xxxxx</a>.</p>
 <p>Fithian W, Sun D, Taylor J. (2014) Optimal Inference After Model Selection. arXiv:1410.2597 [mathST].</p>
 <p>Gao, L. L., Bien, J., and Witten, D. (2020). Selective inference for hierarchical clustering. arXiv:2012.02936.</p>
 <p>Lee J, Sun D, Sun Y, Taylor J. Exact post-selection inference, with application to the lasso. Ann Stat. 2016;44(3):907-927. <a href="doi:10.1214/15-AOS1371" class="uri">doi:10.1214/15-AOS1371</a></p>
@@ -154,11 +150,13 @@ p_{\text{selective}} = \mathbb{P}\left(  \phi \geq \Vert\mathbf{x}^\top \nu \Ver
 
 
       <footer><div class="copyright">
-  <p>Developed by Yiqun Chen.</p>
+  <p></p>
+<p>Developed by Yiqun Chen.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.9000.</p>
 </div>
 
       </footer>
@@ -166,6 +164,8 @@ p_{\text{selective}} = \mathbb{P}\left(  \phi \geq \Vert\mathbf{x}^\top \nu \Ver
 
   
 
+
+  
 
   </body>
 </html>
