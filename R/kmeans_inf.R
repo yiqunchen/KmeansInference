@@ -2,25 +2,31 @@
 #'
 #' @param X Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data
 #' @param k Integer; the number of clusters for k-means clustering
-#' @param iter.max Positive integer; 	the maximum number of iterations allowed in the k-means clustering (Lloyd's) algorithm.
+#' @param iter.max Positive integer; 	the maximum number of iterations allowed in k-means clustering (Lloyd's) algorithm.
 #' Default to \code{10}.
 #' @param seed Random seed for the initialization in k-means clustering algorithm.
 #'
 #' @details
-#' The data given by X are clustered by the k-means clustering,
+#' The data given by X are clustered by k-means clustering,
 #' which aims to partition the points into k groups such that the sum of squares from points
-#' to the assigned cluster centers is minimized. In other words, the k-means clustering solves
+#' to the assigned cluster centers is minimized. In other words, k-means clustering solves
 #' the following optimization problem
 #' \deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
 #'  \right\Vert_2^2 , }
 #'  subject the constraint that \eqn{\mathcal{C}_1,..., {\mathcal{C}_K}} forms a partition of the integers \eqn{1,..., n}.
 #' The algorithm from Lloyd (1957) (also proposed in MacQueen (1967)) is used to produce a solution.
+#'
+#' This function is a re-implementation of the kmeans function in base R (i.e., the stats package) that
+#' stores all the intermediate clustering assignments as well (see Section 3 of our manuscript for details).
+#' Ouputs from these two functions agree on their estimated clusters, as well as their ordering.
+#'
+#' N.B.: the kmeans function in base R was implemented in Fortran and C, while our implementation is entirely in R.
+#' As a result, there might be corner cases where these two functions disagree.
 #' @return Returns a list with the following elements:
-#' "cluster" = cluster_assign_list, "centers" = centroid_list,
 #' \itemize{
 #' \item \code{final_cluster} Estimated clusters via k-means clustering
 #' \item \code{centers} A matrix of the cluster centroids.
-#' \item \code{objective} The objective function at the final iteration of the k-means algorithm.
+#' \item \code{objective} The objective function at the final iteration of k-means algorithm.
 #' }
 #' @examples
 #' library(KmeansInference)
@@ -120,25 +126,23 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 
 
 # ----- main function to test equality of the means of two estimated clusters via k-means clustering -----
-#' Testing for a difference in means between clusters of observations
+#' Test for a difference in means between clusters of observations
 #' identified via k-means clustering.
 #'
-#' This functions tests the null hypothesis of no difference in means between
-#' two estimated clusters \code{cluster_1} and \code{cluster_2} of the output of the
-#' k means clustering solution obtained via the Lloyd's algorithm.
-#' The ordering are numbered as per the results of the \code{kmeans_estimation}
-#' function in the \code{KmeansInference} package.
+#' This function tests the null hypothesis of no difference in means between
+#' output by k-means clustering. The clusters are numbered as per the results of
+#' the \code{kmeans_estimation} function in the \code{KmeansInference} package.
 #' @param X Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data
 #' @param k Integer; the number of clusters for k-means clustering
 #' @param cluster_1,cluster_2 Two different integers in {1,...,k}; two estimated clusters to test, as indexed by the results of
 #' \code{kmeans_estimation}.
 #' @param iso Boolean. If TRUE, an isotropic covariance matrix model is used.
 #' @param sig Numeric; noise standard deviation for the observed data, a non-negative number;
-#' relevant if \code{iso}=TRUE.
-#' @param SigInv Numeric matrix; optional \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma^{-1}}; relevant if \code{iso} is FALSE.
-#' @param iter.max Positive integer; 	the maximum number of iterations allowed in the k-means clustering algorithm. Default to \code{10}.
+#' relevant if \code{iso}=TRUE. If it's not given as input, a median-based estimator will be by default (see Section 4.2 of our manuscript).
+#' @param SigInv Numeric matrix; if \code{iso} is FALSE, *required* \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma^{-1}}.
+#' @param iter.max Positive integer; 	the maximum number of iterations allowed in k-means clustering algorithm. Default to \code{10}.
 #' @param seed Random seed for the initialization in k-means clustering algorithm.
-#' @param tol_eps A small number specifying the convergence criterion for the k-means clustering,
+#' @param tol_eps A small number specifying the convergence criterion for k-means clustering,
 #' default to \code{1e-6}.
 #'
 #' @return Returns a list with the following elements:
@@ -152,7 +156,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' @export
 #'
 #' @details
-#' Consider the generative model \eqn{X \sim MN(\mu,I_n,\sigma^2 I_q)}, The k-means clustering
+#' Consider the generative model \eqn{X \sim MN(\mu,I_n,\sigma^2 I_q)}, k-means clustering
 #' solves the following optimization problem
 #' \deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
 #'  \right\Vert_2^2 , }
@@ -231,10 +235,18 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
     stop("Only one of variance and covariance matrix can be specified!")
   }
   if ((iso)&(is.null(sig))){
-    stop("Specifying sig is needed when iso=TRUE!")
+    cat("Specifying sig is needed when iso=TRUE!\n")
+    cat("variance  not specified, using a robust estimator by default!\n")
+    estimate_MED <- function(X){
+      for (j in c(1:ncol(X))){
+        X[,j] <- X[,j]-median(X[,j])}
+      sigma_hat <- sqrt(median(X^2)/qchisq(1/2,df=1))
+      return(sigma_hat)
+    }
+    sig <- estimate_MED(X)
   }
   if (!(iso)&(is.null(SigInv))){
-    stop("Specifying SigInv is needed when iso=FALSE!")
+    stop("Specifying SigInv is needed when iso=FALSE!\n")
   }
   if((min(cluster_1,cluster_2)<1)|(max(cluster_1,cluster_2)>k)){
     stop("Cluster numbers must be between 1 and k!")
@@ -317,7 +329,7 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
 
   result_list <- list("final_interval"=final_interval_chisq,
                       "final_cluster" = estimated_final_cluster,
-                      "test_stats"=test_stats,
+                      "test_stat"=test_stats,
                       "cluster_1" = cluster_1,
                       "cluster_2" = cluster_2,
                       "sig" = sig, "SigInv" = SigInv,

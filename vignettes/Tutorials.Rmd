@@ -56,7 +56,7 @@ ggplot(data.frame(X), aes(x=X1, y=X2)) +
 ```
 
 ### k-means clustering (K=3)
-In the code below, we call the `kmeans_estimation` function to estimate spikes using the Lloyd's algorithm with $K=3$. In the figure below, observations are colored by the clusters obtained via $k$-means clustering with $K=3$. In this case, $k$-means recovers the true clusters perfectly. 
+In the code below, we call the `kmeans_estimation` function to estimate clusters using Lloyd's algorithm with $K=3$. In the figure below, observations are colored by the clusters obtained via $k$-means clustering with $K=3$. In this case, $k$-means recovers the true clusters perfectly. 
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 k <- 3
@@ -69,6 +69,17 @@ ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
   theme(legend.title = element_blank(),
         plot.title = element_text(hjust = 0.5))
 ```
+
+
+Note that our `kmeans_estimation` function is an `R` implementation of the `kmeans` function in base `R` that stores *all the intermediate clustering assignments* (see Section 3 of our manuscript for details). We see below that the estimated clusters, *as well as their ordering*, agree between these two functions. 
+
+N.B.: the `kmeans` function in base `R` was implemented in Fortran and C, while our implementation is entirely in `R`. As a result, there could be corner cases where these two functions disagree. 
+```{r fig.align="center",  fig.height = 4, fig.width = 5}
+set.seed(2021)
+base_r_estimated_clusters <- kmeans(x=X, centers=k,iter.max = 20, algorithm = "Lloyd")$cluster
+table(estimated_clusters, base_r_estimated_clusters)
+```
+
 
 ### Inference for k-means clustering (K=3)
 
@@ -89,7 +100,7 @@ In the summary, we have the $\ell_2$ norm of the difference in means, i.e.,$\lef
 
 ### Inference for k-means clustering when the null hypothesis holds
 
-In this section, we demonstrate that our proposed $p$-value yields reasonable results when the null hypothesis does hold. Consider the same data as before, and we apply the $k$-means clustering with $K=4$ to obtain four estimated clusters. 
+In this section, we demonstrate that our proposed $p$-value yields reasonable results when the null hypothesis does hold. Consider the same data as before, and we apply $k$-means clustering with $K=4$ to obtain four estimated clusters. 
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 k_new <- 4
