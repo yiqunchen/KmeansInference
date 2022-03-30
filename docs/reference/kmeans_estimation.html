@@ -83,11 +83,11 @@ Default to <code>10</code>.</p></dd>
 </ul></div>
     <div id="details">
     <h2>Details</h2>
-    <p>The data X is clustered by k-means clustering, which aims to partition the points into k groups such that the sum of squares from points
+    <p>For best rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.</p>
+<p>The data X is clustered by k-means clustering, which aims to partition the points into k groups such that the sum of squares from points
 to the assigned cluster centers is minimized. In other words, k-means clustering solves
 the following optimization problem
-$$ \sum_{k=1}^K \sum_{i \in C_k} ||x_i -  \frac{\sum_{i \in C_k} x_i}{|C_k|}
- \right||^2 , $$
+$$ \sum_{k=1}^K \sum_{i \in C_k} \big\Vert x_i - \sum_{i \in C_k} x_i/|C_k| \big\Vert_2^2 , $$
  subject the constraint that \(C_1,..., {C}_K\) forms a partition of the integers \(1,..., n\).
 The algorithm from Lloyd (1957) (also proposed in MacQueen (1967)) is used to produce a solution.</p>
 <p>This function is a re-implementation of the kmeans function in base R (i.e., the stats package) that

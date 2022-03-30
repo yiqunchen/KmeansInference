@@ -7,11 +7,12 @@
 #' @param seed Random seed for the initialization in k-means clustering algorithm.
 #'
 #' @details
+#' For best rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.
+#'
 #' The data X is clustered by k-means clustering, which aims to partition the points into k groups such that the sum of squares from points
 #' to the assigned cluster centers is minimized. In other words, k-means clustering solves
 #' the following optimization problem
-#' \deqn{ \sum_{k=1}^K \sum_{i \in C_k} ||x_i -  \frac{\sum_{i \in C_k} x_i}{|C_k|}
-#'  \right||^2 , }
+#' \deqn{ \sum_{k=1}^K \sum_{i \in C_k} \big\Vert x_i - \sum_{i \in C_k} x_i/|C_k| \big\Vert_2^2 , }
 #'  subject the constraint that \eqn{C_1,..., {C}_K} forms a partition of the integers \eqn{1,..., n}.
 #' The algorithm from Lloyd (1957) (also proposed in MacQueen (1967)) is used to produce a solution.
 #'
@@ -157,21 +158,22 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' @export
 #'
 #' @details
+#' For better rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.
+#'
 #' Consider the generative model \eqn{X ~ MN(\mu,I_n,\sigma^2 I_q)}. First recall that k-means clustering
 #' solves the following optimization problem
-#' \deqn{ \sum_{k=1}^K \sum_{i \in C_k} ||x_i -  \frac{\sum_{i \in C_k} x_i}{|C_k|}
-#'  \right||^2 , }
+#' \deqn{ \sum_{k=1}^K \sum_{i \in C_k} \big\Vert x_i - \sum_{i \in C_k} x_i/|C_k| \big\Vert_2^2 , }
 #'  where \eqn{C_1,..., C_K} forms a partition of the integers \eqn{1,..., n}, and can be regarded as
 #'  the estimated clusters of the original observations. Lloyd's algorithm is an iterative apparoach to solve
 #'  this optimization problem.
 #' Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
 #' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
-#' \eqn{H_{1}: \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vectors \eqn{0_q}.
+#' \eqn{H_{1}: \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vector \eqn{0_q}.
 #'
 #' This function computes the following p-value:
-#' \deqn{P ( || X^T\nu || \ge || x^T\nu ||\Vert_2 \; | \;
+#' \deqn{P \Big( || X^T\nu || \ge || x^T\nu ||_2 \; | \;
 #'   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \{ c_i^{(t)}(X) =
-#'  c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y ),}
+#'  c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y \Big),}
 #' where \eqn{c_i^{(t)}} is the is the cluster to which the \eqn{i}th observation is assigned during the \eqn{t}th iteration of
 #' the Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
 #' In particular, the test based on this p-value controls the selective Type I error and has substantial power.

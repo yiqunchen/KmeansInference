@@ -35,11 +35,12 @@ Returns a list with the following elements:
 Perform k-means clustering on a data matrix.
 }
 \details{
+For best rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.
+
 The data X is clustered by k-means clustering, which aims to partition the points into k groups such that the sum of squares from points
 to the assigned cluster centers is minimized. In other words, k-means clustering solves
 the following optimization problem
-\deqn{ \sum_{k=1}^K \sum_{i \in C_k} ||x_i -  \frac{\sum_{i \in C_k} x_i}{|C_k|}
- \right||^2 , }
+\deqn{ \sum_{k=1}^K \sum_{i \in C_k} \big\Vert x_i - \sum_{i \in C_k} x_i/|C_k| \big\Vert_2^2 , }
  subject the constraint that \eqn{C_1,..., {C}_K} forms a partition of the integers \eqn{1,..., n}.
 The algorithm from Lloyd (1957) (also proposed in MacQueen (1967)) is used to produce a solution.
 
