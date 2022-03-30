@@ -70,10 +70,9 @@ ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
         plot.title = element_text(hjust = 0.5))
 ```
 
+The `kmeans_estimation` function implements the Lloyd's algorithm for k-means clustering and  stores *all the intermediate clustering assignments*. The estimated clusters via `kmeans_estimation`, *as well as their orders*, agree with the those returned by the `kmeans` function in base `R` (with `algorithm = "Lloyd"`).
 
-Note that our `kmeans_estimation` function is an `R` implementation of the `kmeans` function in base `R` that stores *all the intermediate clustering assignments* (see Section 3 of our manuscript for details). We see below that the estimated clusters, *as well as their ordering*, agree between these two functions. 
-
-N.B.: the `kmeans` function in base `R` was implemented in Fortran and C, while our implementation is entirely in `R`. As a result, there could be corner cases where these two functions disagree. 
+N.B.: the `kmeans` function in base `R` is implemented in Fortran and C, while our implementation is entirely in `R`. As a result, these two functions might disagree on few corner cases. 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 set.seed(2021)
 base_r_estimated_clusters <- kmeans(x=X, centers=k,iter.max = 20, algorithm = "Lloyd")$cluster

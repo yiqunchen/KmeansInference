@@ -252,7 +252,7 @@ summary(pos_pval_1_3)
 
 ### References
 
-Chen YT and Witten DM. (2022+) Selective inference for $k$-means clustering. arXiv preprint. https://arxiv.org/abs/xxxx.xxxxx.
+Chen YT and Witten DM. (2022+) Selective inference for $k$-means clustering. arXiv preprint. https://arxiv.org/abs/2203.15267.
 
 Duò, A., Robinson, M. D., and Soneson, C. (2018). A systematic performance evaluation of clustering methods for single-cell RNA-seq data. F1000Research, 7:1141.
 

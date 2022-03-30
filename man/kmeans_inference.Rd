@@ -44,9 +44,11 @@ default to \code{1e-6}.}
 \value{
 Returns a list with the following elements:
 \itemize{
+\item \code{p_naive} the naive p-value which ignores the fact that the clusters under consideration
+are estimated from the same data used for testing
 \item \code{pval} the selective p-value \eqn{p_{selective}} in Chen and Witten (2022+)
 \item \code{final_interval} the conditioning set of Chen and Witten (2022+), stored as the \code{Intervals} class
-\item \code{test_stats} test statistic: the difference in the empirical means of two estimated clusters
+\item \code{test_stat} test statistic: the difference in the empirical means of two estimated clusters
 \item \code{final_cluster} Estimated clusters via k-means clustering
 }
 }
@@ -56,23 +58,23 @@ output by k-means clustering. The clusters are numbered as per the results of
 the \code{kmeans_estimation} function in the \code{KmeansInference} package.
 }
 \details{
-Consider the generative model \eqn{X \sim MN(\mu,I_n,\sigma^2 I_q)}, k-means clustering
+Consider the generative model \eqn{X ~ MN(\mu,I_n,\sigma^2 I_q)}. First recall that k-means clustering
 solves the following optimization problem
-\deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
- \right\Vert_2^2 , }
- where \eqn{\mathcal{C}_1,..., {\mathcal{C}_K}} forms a partition of the integers \eqn{1,..., n}, and can be regarded as
- the estimated clusters of the original observations. In practice, solutions to the optimization problem is
- often obtained using iterative algorithms, e.g., the Lloyd's algorithm.
+\deqn{ \sum_{k=1}^K \sum_{i \in C_k} ||x_i -  \frac{\sum_{i \in C_k} x_i}{|C_k|}
+ \right||^2 , }
+ where \eqn{C_1,..., C_K} forms a partition of the integers \eqn{1,..., n}, and can be regarded as
+ the estimated clusters of the original observations. Lloyd's algorithm is an iterative apparoach to solve
+ this optimization problem.
 Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
 are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
-\eqn{H_{1}:   \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vectors \eqn{0_q}.
+\eqn{H_{1}: \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vectors \eqn{0_q}.
 
 This function computes the following p-value:
-\deqn{P \left( \left\Vert X^T \nu \right\Vert_2 \ge \left\Vert x^T \nu  \right\Vert_2 \; | \;
-  \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \left\{ c_i^{(t)} \left( X \right) =
- c_i^{(t)}\left( x \right) \right\},  \Pi_\nu^\perp Y  =  \Pi_\nu^\perp y \right),}
-where \eqn{c_i^{(t)}} is the is the cluster assigned to the \eqn{i}th observation at the \eqn{t}th iteration of
-the Lloyd's algorithm, and \eqn{\Pi_\nu^\perp} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
+\deqn{P ( || X^T\nu || \ge || x^T\nu ||\Vert_2 \; | \;
+  \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \{ c_i^{(t)}(X) =
+ c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y ),}
+where \eqn{c_i^{(t)}} is the is the cluster to which the \eqn{i}th observation is assigned during the \eqn{t}th iteration of
+the Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
 In particular, the test based on this p-value controls the selective Type I error and has substantial power.
 Readers can refer to the Sections 2 and 4 in Chen and Witten (2022+) for more details.
 }
@@ -116,7 +118,7 @@ geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
 }
 \references{
 Chen YT, Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint.
-https://arxiv.org/abs/xxxx.xxxxx.
+https://arxiv.org/abs/2203.15267.
 Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.
 Published in 1982 in IEEE Transactions on Information Theory, 28, 128–137.
 }

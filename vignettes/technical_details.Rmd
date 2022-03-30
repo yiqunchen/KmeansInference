@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 ![](../man/figures/figure_1_a.png){width=30%}
 ![](../man/figures/figure_1_b.png){width=30%}
 ![](../man/figures/figure_1_c.png){width=30%}
-<figcaption>Figure 1: (a): One simulated dataset generated according to $\mathcal{MN}_{100\times 2}(\textbf{0}_{100\times 2}, \textbf{I}_{100}, \sigma^2 \textbf{I}_{2})$. We apply $k$-means clustering to obtain three clusters. The cluster centroids are displayed as triangles. (b): Quantile-quantile plot of the Wald p-values applied to 2,000 simulated datasets from $\mathcal{MN}_{100\times 2}(\textbf{0}_{100\times 2}, \textbf{I}_{100}, \sigma^2 \textbf{I}_{2})$. (c): Quantile-quantile plot of our proposed p-values applied to the same simulated datasets as in (b).</figcaption>
+<figcaption>Figure 1: *Left*: One simulated dataset generated according to $\mathcal{MN}_{100\times 2}(\textbf{0}_{100\times 2}, \textbf{I}_{100}, \sigma^2 \textbf{I}_{2})$. We apply $k$-means clustering to obtain three clusters. The cluster centroids are displayed as triangles. *Center*: Quantile-quantile plot of the Wald p-values applied to 2,000 simulated datasets from $\mathcal{MN}_{100\times 2}(\textbf{0}_{100\times 2}, \textbf{I}_{100}, \sigma^2 \textbf{I}_{2})$. *Right*: Quantile-quantile plot of our proposed p-values applied to the same simulated datasets as in center.</figcaption>
 </center>
 
 
@@ -89,7 +89,7 @@ Our software also allows for the following extensions:
 
 ### References
 
-Chen YT and Witten DM. (2022+) Selective inference for $k$-means clustering. arXiv preprint. https://arxiv.org/abs/xxxx.xxxxx.
+Chen YT and Witten DM. (2022+) Selective inference for $k$-means clustering. arXiv preprint. https://arxiv.org/abs/2203.15267.
 
 Fithian W, Sun D, Taylor J. (2014) Optimal Inference After Model Selection. arXiv:1410.2597 [mathST]. 
 

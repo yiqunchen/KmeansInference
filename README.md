@@ -22,7 +22,7 @@ Visit https://yiqunchen.github.io/KmeansInference/ for tutorials and examples. P
 
 If you use `KmeansInference` for your analysis, please cite our manuscript:
 
-Chen YT,  Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint. https://arxiv.org/abs/xxxx.xxxxx.
+Chen YT,  Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint. https://arxiv.org/abs/2203.15267.
  
 ### Bug Reports / Change Requests
 

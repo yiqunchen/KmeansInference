@@ -41,7 +41,7 @@ In this work, we propose a test for a difference in means between two clusters e
 
 If you use `KmeansInference` for your analysis, please cite our manuscript:
 
-Chen YT,  Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint. https://arxiv.org/abs/xxxx.xxxxx.
+Chen YT,  Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint. https://arxiv.org/abs/2203.15267.
  
 ### Bug Reports / Change Requests
 
@@ -49,7 +49,7 @@ If you encounter a bug or would like to make a change request, please file it as
 
 ### References
 
-Chen YT,  Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint. https://arxiv.org/abs/xxxx.xxxxx.
+Chen YT,  Witten DM. (2022+) Selective inference for k-means clustering. arXiv preprint. https://arxiv.org/abs/2203.15267.
 
 Fithian W, Sun D, Taylor J. (2014) Optimal Inference After Model Selection. arXiv:1410.2597 [mathST].
 
