@@ -2,7 +2,7 @@
 % Please edit documentation in R/kmeans_inf.R
 \name{kmeans_inference}
 \alias{kmeans_inference}
-\title{Testing for a difference in means between clusters of observations
+\title{Test for a difference in means between clusters of observations
 identified via k-means clustering.}
 \usage{
 kmeans_inference(
@@ -30,35 +30,33 @@ kmeans_inference(
 \item{iso}{Boolean. If TRUE, an isotropic covariance matrix model is used.}
 
 \item{sig}{Numeric; noise standard deviation for the observed data, a non-negative number;
-relevant if \code{iso}=TRUE.}
+relevant if \code{iso}=TRUE. If it's not given as input, a median-based estimator will be by default (see Section 4.2 of our manuscript).}
 
-\item{SigInv}{Numeric matrix; optional \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma^{-1}}; relevant if \code{iso} is FALSE.}
+\item{SigInv}{Numeric matrix; if \code{iso} is FALSE, *required* \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma^{-1}}.}
 
-\item{iter.max}{Positive integer;     the maximum number of iterations allowed in the k-means clustering algorithm. Default to \code{10}.}
+\item{iter.max}{Positive integer;     the maximum number of iterations allowed in k-means clustering algorithm. Default to \code{10}.}
 
 \item{seed}{Random seed for the initialization in k-means clustering algorithm.}
 
-\item{tol_eps}{A small number specifying the convergence criterion for the k-means clustering,
+\item{tol_eps}{A small number specifying the convergence criterion for k-means clustering,
 default to \code{1e-6}.}
 }
 \value{
 Returns a list with the following elements:
 \itemize{
-\item \code{pval} the selective p-value \eqn{p_{k-means}} in Chen and Witten (2022+)
+\item \code{pval} the selective p-value \eqn{p_{selective}} in Chen and Witten (2022+)
 \item \code{final_interval} the conditioning set of Chen and Witten (2022+), stored as the \code{Intervals} class
 \item \code{test_stats} test statistic: the difference in the empirical means of two estimated clusters
 \item \code{final_cluster} Estimated clusters via k-means clustering
 }
 }
 \description{
-This functions tests the null hypothesis of no difference in means between
-two estimated clusters \code{cluster_1} and \code{cluster_2} of the output of the
-k means clustering solution obtained via the Lloyd's algorithm.
-The ordering are numbered as per the results of the \code{kmeans_estimation}
-function in the \code{KmeansInference} package.
+This function tests the null hypothesis of no difference in means between
+output by k-means clustering. The clusters are numbered as per the results of
+the \code{kmeans_estimation} function in the \code{KmeansInference} package.
 }
 \details{
-Consider the generative model \eqn{X \sim MN(\mu,I_n,\sigma^2 I_q)}, The k-means clustering
+Consider the generative model \eqn{X \sim MN(\mu,I_n,\sigma^2 I_q)}, k-means clustering
 solves the following optimization problem
 \deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
  \right\Vert_2^2 , }

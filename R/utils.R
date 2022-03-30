@@ -121,7 +121,7 @@ multivariate_Z_test <- function(X, cluster_vec, k1, k2, sig) {
 summary.kmeans_inference <- function(object, ...){
   result <- data.frame(cluster_1 = object$cluster_1,
                        cluster_2 = object$cluster_2,
-                       test_stats = object$test_stats,
+                       test_stat = object$test_stat,
                        p_selective = object$pval,
                        p_naive = object$p_naive[['pval']])
   return(result)

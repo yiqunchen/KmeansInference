@@ -18,32 +18,38 @@ kmeans_estimation(
 
 \item{k}{Integer; the number of clusters for k-means clustering}
 
-\item{iter.max}{Positive integer;     the maximum number of iterations allowed in the k-means clustering (Lloyd's) algorithm.
+\item{iter.max}{Positive integer;     the maximum number of iterations allowed in k-means clustering (Lloyd's) algorithm.
 Default to \code{10}.}
 
 \item{seed}{Random seed for the initialization in k-means clustering algorithm.}
 }
 \value{
 Returns a list with the following elements:
-"cluster" = cluster_assign_list, "centers" = centroid_list,
 \itemize{
 \item \code{final_cluster} Estimated clusters via k-means clustering
 \item \code{centers} A matrix of the cluster centroids.
-\item \code{objective} The objective function at the final iteration of the k-means algorithm.
+\item \code{objective} The objective function at the final iteration of k-means algorithm.
 }
 }
 \description{
 Perform k-means clustering on a data matrix.
 }
 \details{
-The data given by X are clustered by the k-means clustering,
+The data given by X are clustered by k-means clustering,
 which aims to partition the points into k groups such that the sum of squares from points
-to the assigned cluster centers is minimized. In other words, the k-means clustering solves
+to the assigned cluster centers is minimized. In other words, k-means clustering solves
 the following optimization problem
 \deqn{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}
  \right\Vert_2^2 , }
  subject the constraint that \eqn{\mathcal{C}_1,..., {\mathcal{C}_K}} forms a partition of the integers \eqn{1,..., n}.
 The algorithm from Lloyd (1957) (also proposed in MacQueen (1967)) is used to produce a solution.
+
+This function is a re-implementation of the kmeans function in base R (i.e., the stats package) that
+stores all the intermediate clustering assignments as well (see Section 3 of our manuscript for details).
+Ouputs from these two functions agree on their estimated clusters, as well as their ordering.
+
+N.B.: the kmeans function in base R was implemented in Fortran and C, while our implementation is entirely in R.
+As a result, there might be corner cases where these two functions disagree.
 }
 \examples{
 library(KmeansInference)
