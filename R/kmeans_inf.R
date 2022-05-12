@@ -175,7 +175,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #'   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \{ c_i^{(t)}(X) =
 #'  c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y \Big),}
 #' where \eqn{c_i^{(t)}} is the is the cluster to which the \eqn{i}th observation is assigned during the \eqn{t}th iteration of
-#' the Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
+#' Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
 #' In particular, the test based on this p-value controls the selective Type I error and has substantial power.
 #' Readers can refer to the Sections 2 and 4 in Chen and Witten (2022+) for more details.
 #' @examples
@@ -232,15 +232,8 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
   if(k>=nrow(X)){
     stop("Cannot have more clusters than observations")
   }
-  if(is.null(sig)&is.null(SigInv)){
-    stop("At least one of variance and covariance matrix must be specified!")
-  }
-  if((!is.null(sig))&(!is.null(SigInv))){
-    stop("Only one of variance and covariance matrix can be specified!")
-  }
   if ((iso)&(is.null(sig))){
-    cat("Specifying sig is needed when iso=TRUE!\n")
-    cat("variance not specified, using a robust median-based estimator by default!\n")
+    cat("Variance not specified, using a robust median-based estimator by default!\n")
     estimate_MED <- function(X){
       for (j in c(1:ncol(X))){
         X[,j] <- X[,j]-median(X[,j])}
@@ -248,6 +241,12 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
       return(sigma_hat)
     }
     sig <- estimate_MED(X)
+  }
+  if(is.null(sig)&is.null(SigInv)){
+    stop("At least one of variance and covariance matrix must be specified!")
+  }
+  if((!is.null(sig))&(!is.null(SigInv))){
+    stop("Only one of variance and covariance matrix can be specified!")
   }
   if (!(iso)&(is.null(SigInv))){
     stop("You must specify SigInv when iso=FALSE!\n")
