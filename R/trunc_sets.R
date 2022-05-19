@@ -273,17 +273,18 @@ norm_sq_phi <- function(X, v, XTv, XTv_norm, dir_XTv, v_norm, i, j){
 #'
 #' @return parameters: a, b, c the coefficients of the quadratic equation such that (ax^2 + bx + c <= 0)
 #'
-norm_phi_canonical_kmeans <- function(X, last_centroids, XTv, XTv_norm, dir_XTv, v_norm, cl, k, v, i){
-  n_k <- sum(cl==k)
-  indicator_vec <- rep(0, times=length(cl))
-  indicator_vec[cl==k] <- 1
-  indicator_location <- which(cl==k)
+norm_phi_canonical_kmeans <- function(X, last_centroids, XTv, XTv_norm, dir_XTv, v_norm, cl, k, v, i, weighted_v_i){
+  #n_k <- sum(cl==k)
+  #indicator_vec <- rep(0, times=length(cl))
+  #indicator_vec[cl==k] <- 1
+  #indicator_location <- which(cl==k)
   #v_norm <- norm_vec(v)
   #XTv <- t(X)%*%v
   #XTv_norm <- norm_vec(XTv)
   #dir_XTv <- XTv/norm_vec(XTv)
   # compute quad coef
-  v_i_expression <- (v[i]-sum(indicator_vec*v)/n_k)/(v_norm^2)
+  #v_i_expression <- (v[i]-sum(indicator_vec*v)/n_k)/(v_norm^2)
+  v_i_expression <- (v[i]-weighted_v_i[k])/(v_norm^2)
   #X_current <- X[indicator_location,]
   #x_i_expression <- X[i,] - ((t(indicator_vec) %*% X)/n_k)
   x_i_expression <- X[i,] - last_centroids[k,]
@@ -351,15 +352,30 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
       last_centroids <- all_T_centroids[[(l+1)]] # k by q matrix
       # pre-compute the centroids (or maybe extract from kmeans estimation??)
       # loop through all the observations
+
+      # pre-compute all the indicator sums for this round
+
+      weighted_v_i_all_k <- rep(0, times=k)
+      for (j in c(1:k)){
+        # v_vec
+        n_k <- sum(last_cl==j) # sum for n_k
+        indicator_vec <- rep(0, times=length(last_cl))
+        indicator_vec[last_cl==j] <- 1
+        weighted_v_i_all_k[j] <- sum(indicator_vec*v_vec)/n_k
+      }
+
+
       for (i in c(1:n)){
         # loop through all cluster classes
         current_cl_i <- current_cl[i]
+        # make things faster by pre-computing the part
+
         k_star_quad <- norm_phi_canonical_kmeans(X, last_centroids, XTv, XTv_norm, dir_XTv, v_norm, last_cl,
-                                                 current_cl_i, v_vec, i) #i is the observation
+                                                 current_cl_i, v_vec, i, weighted_v_i_all_k) #i is the observation
         for (j in c(1:k)){
           if(j!=current_cl_i){
             k_current_quad <- norm_phi_canonical_kmeans(X, last_centroids, XTv, XTv_norm,
-                                                        dir_XTv, v_norm, last_cl, j, v_vec, i) #i is the observation
+                                                        dir_XTv, v_norm, last_cl, j, v_vec, i, weighted_v_i_all_k) #i is the observation
             curr_quad <- minus_quad_ineq(k_star_quad, k_current_quad)
             curr_interval <- solve_one_ineq_complement(curr_quad$quad,
                                                        curr_quad$linear,
@@ -371,6 +387,7 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
           #final_interval <- intervals::interval_intersection(final_interval, curr_interval)
 
         }
+
       }
     }
   }
@@ -429,16 +446,26 @@ kmeans_compute_S_genCov <- function(X, estimated_k_means, all_T_clusters,
       last_cl <- all_T_clusters[(l),]
       # get pre-computed centroids
       last_centroids <- all_T_centroids[[(l+1)]] # k by q matrix
+
+      weighted_v_i_all_k <- rep(0, times=k)
+      for (j in c(1:k)){
+        # v_vec
+        n_k <- sum(last_cl==j) # sum for n_k
+        indicator_vec <- rep(0, times=length(last_cl))
+        indicator_vec[last_cl==j] <- 1
+        weighted_v_i_all_k[j] <- sum(indicator_vec*v_vec)/n_k
+      }
+
       # loop through all the observations
       for (i in c(1:n)){
         # loop through all cluster classes
         current_cl_i <- current_cl[i]
         k_star_quad <- norm_phi_canonical_kmeans(X, last_centroids, XTv, XTv_norm, dir_XTv, v_norm, last_cl,
-                                                 current_cl_i, v_vec, i) #i is the observation
+                                                 current_cl_i, v_vec, i, weighted_v_i_all_k) #i is the observation
         for (j in c(1:k)){
 
           k_current_quad <- norm_phi_canonical_kmeans(X, last_centroids, XTv, XTv_norm,
-                                                      dir_XTv, v_norm, last_cl, j, v_vec, i) #i is the observation
+                                                      dir_XTv, v_norm, last_cl, j, v_vec, i, weighted_v_i_all_k) #i is the observation
           curr_quad <- minus_quad_ineq(k_star_quad, k_current_quad)
           curr_interval <- solve_one_ineq_complement((Sig_Inv_factor)^2*curr_quad$quad,
                                                                (Sig_Inv_factor)*curr_quad$linear,
