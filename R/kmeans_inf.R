@@ -70,6 +70,11 @@
 kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
                               tol_eps = 1e-4, verbose=TRUE){
 
+  # credit: https://stackoverflow.com/questions/59679046/speed-challenge-any-faster-method-to-calculate-distance-matrix-between-rows-of
+  # user: F. Privé
+  fast_dist_compute <- function(x,y) {
+    (outer(rowSums(x^2), rowSums(y^2), '+') - tcrossprod(x, 2 * y)) # no need to sqrt
+  }
   set.seed(seed)
   if(!is.matrix(X)) stop("X should be a matrix")
   if(k>=nrow(X)){
@@ -85,13 +90,13 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
   initial_sample <- sample(c(1:n),k,replace=F)
   current_centroid <- X[initial_sample,]
   # first set of assignments
-  distance_matrix <- rdist::cdist(current_centroid,X)
+  distance_matrix <- fast_dist_compute(current_centroid, X) #rdist::cdist(current_centroid,X)
   current_cluster <- apply(distance_matrix,2,which.min)
   iter_T <- iter_T+1
   centroid_list[[iter_T]] <- current_centroid
   cluster_assign_list[[iter_T]] <- current_cluster
   curr_objective_value <- sum(apply(distance_matrix,2,min)^2)
-  objective_diff <- 10000 #curr_objective_value
+  objective_diff <- 10000 #curr_objective_value; some large default
   objective_value[[iter_T]] <- curr_objective_value
   same_cluster <- FALSE
   while((iter_T<=iter.max)&(!same_cluster)){
@@ -102,7 +107,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
       current_centroid[current_k,] <- new_centroid_k  # 1 by q
     } # current_centroid is k by q
     # update assignments
-    distance_matrix <- rdist::cdist(current_centroid,X)
+    distance_matrix <- fast_dist_compute(current_centroid,X) #rdist::cdist(current_centroid,X)
     current_cluster <- apply(distance_matrix,2,which.min)
     # add iteration and store relevant information
     iter_T <- iter_T+1
