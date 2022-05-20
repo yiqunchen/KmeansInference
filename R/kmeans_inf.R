@@ -95,7 +95,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
   iter_T <- iter_T+1
   centroid_list[[iter_T]] <- current_centroid
   cluster_assign_list[[iter_T]] <- current_cluster
-  curr_objective_value <- sum(apply(distance_matrix,2,min)^2)
+  curr_objective_value <- sum(apply(distance_matrix,2,min)) #^2 removed
   objective_diff <- 10000 #curr_objective_value; some large default
   objective_value[[iter_T]] <- curr_objective_value
   same_cluster <- FALSE
@@ -115,7 +115,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
     cluster_assign_list[[iter_T]] <- current_cluster
     same_cluster <- all(current_cluster==cluster_assign_list[[iter_T-1]])
     # update objective diff
-    new_objective_value <- sum(apply(distance_matrix,2,min)^2)
+    new_objective_value <- sum(apply(distance_matrix,2,min)) #sum(apply(distance_matrix,2,min)^2)
     objective_diff <- abs(curr_objective_value-(new_objective_value))/curr_objective_value
     curr_objective_value <- new_objective_value
     # store objextive as well
