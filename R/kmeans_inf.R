@@ -342,7 +342,7 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
                       "cluster_2" = cluster_2,
                       "sig" = sig, "SigInv" = SigInv,
                       "scale_factor" = scale_factor,
-                      "p_naive" = p_naive,
+                      "p_naive" = p_naive$pval,
                        "call" = match.call(),
                       "pval" = pval)
   class(result_list) <- "kmeans_inference"

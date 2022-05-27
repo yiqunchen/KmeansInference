@@ -275,13 +275,6 @@ norm_sq_phi <- function(X, v, XTv, XTv_norm, dir_XTv, v_norm, i, j){
 #'
 norm_phi_canonical_kmeans <- function(X, last_centroids, XTv, XTv_norm, dir_XTv, v_norm, cl, k, v, i, weighted_v_i){
   #n_k <- sum(cl==k)
-  #indicator_vec <- rep(0, times=length(cl))
-  #indicator_vec[cl==k] <- 1
-  #indicator_location <- which(cl==k)
-  #v_norm <- norm_vec(v)
-  #XTv <- t(X)%*%v
-  #XTv_norm <- norm_vec(XTv)
-  #dir_XTv <- XTv/norm_vec(XTv)
   # compute quad coef
   #v_i_expression <- (v[i]-sum(indicator_vec*v)/n_k)/(v_norm^2)
   v_i_expression <- (v[i]-weighted_v_i[k])/(v_norm^2)
@@ -346,6 +339,7 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
   curr_counter <- 1
   # loop through all sequence t
   if(T_length>1){
+
     for (l in c(1:(T_length-1))){
       current_cl <- all_T_clusters[(l+1),]
       last_cl <- all_T_clusters[(l),]
@@ -356,6 +350,7 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
       # pre-compute all the indicator sums for this round
 
       weighted_v_i_all_k <- rep(0, times=k)
+
       for (j in c(1:k)){
         # v_vec
         n_k <- sum(last_cl==j) # sum for n_k
@@ -370,12 +365,14 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
         current_cl_i <- current_cl[i]
         # make things faster by pre-computing the part
 
-        k_star_quad <- norm_phi_canonical_kmeans(X, last_centroids, XTv, XTv_norm, dir_XTv, v_norm, last_cl,
-                                                 current_cl_i, v_vec, i, weighted_v_i_all_k) #i is the observation
+        k_star_quad <- norm_phi_canonical_kmeans(X, last_centroids, XTv, XTv_norm, dir_XTv,
+                                                 v_norm, last_cl, current_cl_i, v_vec,
+                                                 i, weighted_v_i_all_k) #i is the observation
         for (j in c(1:k)){
           if(j!=current_cl_i){
             k_current_quad <- norm_phi_canonical_kmeans(X, last_centroids, XTv, XTv_norm,
-                                                        dir_XTv, v_norm, last_cl, j, v_vec, i, weighted_v_i_all_k) #i is the observation
+                                                        dir_XTv, v_norm, last_cl, j, v_vec,
+                                                        i, weighted_v_i_all_k) #i is the observation
             curr_quad <- minus_quad_ineq(k_star_quad, k_current_quad)
             curr_interval <- solve_one_ineq_complement(curr_quad$quad,
                                                        curr_quad$linear,
@@ -383,11 +380,7 @@ kmeans_compute_S_iso <- function(X, estimated_k_means, all_T_clusters,
             all_interval_lists[[curr_len+curr_counter]] <- curr_interval
             curr_counter <- curr_counter + 1
           }
-          # interval update
-          #final_interval <- intervals::interval_intersection(final_interval, curr_interval)
-
         }
-
       }
     }
   }
