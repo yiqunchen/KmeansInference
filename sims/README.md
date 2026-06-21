@@ -64,27 +64,53 @@ for **any K**, replacing Yun–Barber's importance sampling for K>2.
 - `plot_power_type1.R`, `plot_unknown_var.R`, `plot_standard_sweep.R`,
   `plot_cw.R`, `plot_cw_typeI.R`, `plot_cw_power.R`
 
-## Running the sweeps
+## Reproduce everything — exact steps
+
+Run from the package root. `<ncores>` = parallel chunks (use cores−1). Every
+sweep is checkpointed: **re-run the identical command to resume**; append
+`finalize` to (re)build `summary.csv` from whatever chunks exist.
 
 ```bash
-# quick smoke test of the whole pipeline (~minutes)
-Rscript sims/sweep_run.R smoke 4 25 sims/results/sweep_smoke
+# ---- 0. one-time setup ----------------------------------------------------
+R CMD INSTALL .
+Rscript -e 'install.packages(c("intervals","ggplot2","gridExtra"))'
 
-# the broad grid (n=60, k/genCov/unbalanced extensions)
+# ---- 1. verify the code (~1 min) ------------------------------------------
+Rscript sims/test_rfiber_exact.R          # exact-solver primitives  -> 14/14
+Rscript sims/test_path_arc.R              # exact-solver assembler    -> 18/18
+Rscript -e 'library(testthat); library(KmeansInference); test_dir("tests/testthat")'  # 54
+
+# ---- 2. known-variance Type I + power (union vs path vs naive) ~10 min -----
+Rscript sims/power_type1_union_vs_path.R 200 100      # -> results/power_type1_*.rds
+Rscript sims/plot_power_type1.R                       # -> results/power_type1.{pdf,png}
+
+# ---- 3. broad sweep: n=60, k / genCov / unbalanced extensions ~1 h ---------
 Rscript sims/sweep_run.R standard 7 50 sims/results/sweep_standard
+Rscript sims/sweep_run.R standard 7 50 sims/results/sweep_standard finalize
+Rscript sims/plot_standard_sweep.R                   # -> results/standard_sweep.{pdf,png}
 
-# Chen-&-Witten-faithful (n=90: Type I q in {2,10,50,100} @1000 reps,
-#   power q in {2,10,50} x delta=1..8 @sigma=1, + detection/conditional power)
-Rscript sims/sweep_run.R cw 7 50 sims/results/sweep_cw
+# ---- 4. Chen-&-Witten-faithful sweep: n=90 ~5 h ---------------------------
+#   Type I (global null) q in {2,10,50,100} @1000 reps;
+#   power q in {2,10,50} x delta=1..8 @sigma=1; detection + conditional power;
+#   known-variance union AND valid unknown-variance (R-fiber) union columns.
+Rscript sims/sweep_run.R cw 7 50 sims/results/sweep_cw          # (resume: re-run this line)
+Rscript sims/sweep_run.R cw 7 50 sims/results/sweep_cw finalize
+Rscript sims/plot_cw_typeI.R  sims/results/sweep_cw   # -> results/cw_typeI.{pdf,png}
+Rscript sims/plot_cw_power.R  sims/results/sweep_cw   # -> results/cw_power{,_var}.{pdf,png}
+Rscript sims/plot_cw.R        sims/results/sweep_cw   # -> results/cw_panels.{pdf,png}
 
-# args: <tier> <ncores> <chunk> <ckpt_dir>
-#   ncores = parallel chunks;  chunk = reps per checkpoint unit
+# ---- 5. unknown-variance: calibration + efficiency ------------------------
+Rscript sims/validate_Rfiber.R 4          # numerical R-fiber union calibrates
+Rscript sims/validate_exact.R 4           # exact R-fiber union calibrates
+Rscript sims/union_multiplicity.R 4       # M_eff ~ 1 (effective #regions)
 ```
 
-- **Resume** after any interruption: re-run the *same command* (finished chunks are skipped).
-- **Partial summary** anytime: append `finalize` →
-  `Rscript sims/sweep_run.R cw 7 50 sims/results/sweep_cw finalize`
-- Edit the grids / tiers in `build_grid()` at the top of `sweep_run.R`.
+Notes
+- The plot scripts in step 4 take the **results dir as their first argument**, so
+  the same commands work for any sweep dir (e.g. a re-run under another name).
+- The `cw` sweep is the headline figure set; `standard` adds the k/genCov/
+  unbalanced extensions. Edit the grids/tiers in `build_grid()` at the top of
+  `sweep_run.R` to change parameters.
 
 ## Cluster execution
 

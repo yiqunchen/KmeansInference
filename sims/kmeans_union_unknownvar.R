@@ -25,7 +25,9 @@ source("sims/unknown_var_union.R")               # fun_P0, fun_P1, fun_ts
 # truncated-F upper p-value over a set of r-intervals (rows [lo,hi]).
 .trunc_F_p <- function(R_obs, ivl, df1, df2) {
   if (is.null(ivl) || nrow(ivl) == 0) return(NA_real_)
-  pint <- function(a, b) pf(b, df1, df2) - pf(a, df1, df2)
+  # cancellation-proof F-mass (survival difference handles the extreme-tail case)
+  pint <- function(a, b) max(pf(b, df1, df2) - pf(a, df1, df2),
+                             pf(a, df1, df2, lower.tail = FALSE) - pf(b, df1, df2, lower.tail = FALSE), 0)
   den <- sum(apply(ivl, 1, function(z) pint(z[1], z[2]))); if (den <= 0) return(NA_real_)
   num <- sum(apply(ivl, 1, function(z) { a <- max(z[1], R_obs); if (z[2] <= a) 0 else pint(a, z[2]) }))
   max(0, min(1, num / den))

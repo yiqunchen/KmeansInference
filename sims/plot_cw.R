@@ -3,7 +3,7 @@
 # Robust to PARTIAL data (sweep may still be running): cells/curves with too
 # few valid reps are dropped, and the title is marked accordingly.
 source("sims/house_style.R")
-DIR <- "sims/results/sweep_cw"
+DIR <- if (length(commandArgs(TRUE))) commandArgs(TRUE)[1] else "sims/results/sweep_cw"
 s   <- read.csv(file.path(DIR, "summary.csv"), stringsAsFactors = FALSE)
 done <- length(list.files(file.path(DIR, "cells")))
 tag  <- sprintf(" (partial: %d/140 chunks)", done)

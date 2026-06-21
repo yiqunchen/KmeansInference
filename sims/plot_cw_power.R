@@ -3,7 +3,7 @@
 # with 95% binomial CI error bars. Plus a known-vs-unknown-variance panel.
 # Robust to partial data (cells with < 40 valid reps are dropped).
 source("sims/house_style.R")
-DIR <- "sims/results/sweep_cw"
+DIR <- if (length(commandArgs(TRUE))) commandArgs(TRUE)[1] else "sims/results/sweep_cw"
 s   <- read.csv(file.path(DIR, "summary.csv"), stringsAsFactors = FALSE)
 pw  <- s[grepl("cw_power", s$label) & s$n_valid >= 40, ]
 if (nrow(pw) == 0) stop("no power cells with >=40 valid reps yet")
@@ -40,11 +40,13 @@ ggsave_km(p1, "sims/results/cw_power", width = 11, height = 4.2)
 ## --- Panel set 2: known vs unknown variance (q = 10), union vs path ----------
 q10 <- pw[pw$q == 10, ]
 if (nrow(q10) >= 2) {
+  # unknown-variance = the VALID R-fiber union/path (rfib); the phi-remap union
+  # was anti-conservative and removed.
   uv <- rbind(
-    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_union,     method = "union", v = "known"),
-    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_path,      method = "path",  v = "known"),
-    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_union_unk, method = "union", v = "unknown"),
-    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_path_unk,  method = "path",  v = "unknown"))
+    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_union,      method = "union", v = "known"),
+    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_path,       method = "path",  v = "known"),
+    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_union_rfib, method = "union", v = "unknown"),
+    data.frame(delta = q10$delta, n = q10$n_valid, rej = q10$rej_path_rfib,  method = "path",  v = "unknown"))
   uv$method <- factor(uv$method, levels = c("union", "path"))
   uv$lo <- pmax(0, uv$rej - 1.96 * se(uv$rej, uv$n))
   uv$hi <- pmin(1, uv$rej + 1.96 * se(uv$rej, uv$n))

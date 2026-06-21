@@ -93,7 +93,11 @@ intersect_intervals <- function(a, b) {
 ## ---- Module 7: truncated-F upper p-value over r-intervals ------------------
 trunc_F_p <- function(R_obs, ivl_r, df1, df2) {
   if (is.null(ivl_r) || nrow(ivl_r) == 0) return(NA_real_)
-  pint <- function(a, b) pf(b, df1, df2) - pf(a, df1, df2)
+  # cancellation-proof F-mass of [a,b]: max of the CDF-difference (stable in the
+  # lower/central region) and the SURVIVAL-difference (stable in the upper tail,
+  # where both CDFs ~ 1 -- the extreme-separation underflow case).
+  pint <- function(a, b) max(pf(b, df1, df2) - pf(a, df1, df2),
+                             pf(a, df1, df2, lower.tail = FALSE) - pf(b, df1, df2, lower.tail = FALSE), 0)
   den <- sum(apply(ivl_r, 1, function(z) pint(z[1], z[2]))); if (den <= 0) return(NA_real_)
   num <- sum(apply(ivl_r, 1, function(z) { a <- max(z[1], R_obs); if (z[2] <= a) 0 else pint(a, z[2]) }))
   max(0, min(1, num / den))

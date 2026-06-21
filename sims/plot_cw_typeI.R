@@ -3,7 +3,7 @@
 # unknown variance. Encoding (one channel = one variable): colour = q,
 # linetype = method (union solid / path dashed); facet = variance.
 source("sims/house_style.R")
-DIR <- "sims/results/sweep_cw"
+DIR <- if (length(commandArgs(TRUE))) commandArgs(TRUE)[1] else "sims/results/sweep_cw"
 read_raw <- function(label) {
   fs <- list.files(file.path(DIR, "cells"),
                    pattern = paste0("^", label, "__c"), full.names = TRUE)
