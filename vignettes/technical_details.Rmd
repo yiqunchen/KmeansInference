@@ -87,6 +87,34 @@ Our software also allows for the following extensions:
 1. Allow for inference with unknown $\sigma$, i.e., where $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with *unknown* $\sigma$.
 2. Allow for inference with a known, positive-definite covariance matrix $\boldsymbol{\Sigma}$, i.e., where $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \boldsymbol{\Sigma})$.
 
+### Inference with unknown $\sigma$: the studentized "R-fiber"
+
+When $\sigma$ is unknown we cannot compare $\Vert \mathbf{x}^\top\nu\Vert_2$ to a scaled $\chi_q$ — the scale is precisely what we lack. Following Yun and Barber (2023), we *studentize*. Decompose the data with three Frobenius-orthogonal projections in $\mathbb{R}^{n\times n}$: the rank-one **between-cluster** projection $\mathbf{P}_0 = \nu\nu^\top/\Vert\nu\Vert_2^2$ (so $\Vert\mathbf{P}_0\mathbf{x}\Vert_F = \Vert\mathbf{x}^\top\nu\Vert_2/\Vert\nu\Vert_2$), the **within-cluster** centering projection $\mathbf{P}_1$ for the two tested clusters (rank $m-2$, with $m=|\hat{\mathcal C}_1|+|\hat{\mathcal C}_2|$), and the nuisance $\mathbf{P}_2 = \mathbf{I}_n-\mathbf{P}_0-\mathbf{P}_1$. The studentized statistic is
+$$
+R \;=\; \frac{\Vert \mathbf{P}_0\mathbf{x}\Vert_F^2/q}{\Vert \mathbf{P}_1\mathbf{x}\Vert_F^2/((m-2)q)} \;=\; (m-2)\,\frac{\Vert \mathbf{P}_0\mathbf{x}\Vert_F^2}{\Vert \mathbf{P}_1\mathbf{x}\Vert_F^2} \;\sim\; F_{q,\,(m-2)q}\quad\text{under } H_0,
+$$
+where the unknown $\sigma$ cancels between the between-cluster signal (numerator) and the within-cluster scatter that now serves as its estimate (denominator).
+
+We condition on the clustering path together with $\mathbf{P}_2\mathbf{x}$, the directions $U_0=\mathbf{P}_0\mathbf{x}/\Vert\mathbf{P}_0\mathbf{x}\Vert_F$ and $U_1=\mathbf{P}_1\mathbf{x}/\Vert\mathbf{P}_1\mathbf{x}\Vert_F$ (note $U_0\perp U_1$), and the **total energy** $T=\Vert\mathbf{P}_0\mathbf{x}\Vert_F^2+\Vert\mathbf{P}_1\mathbf{x}\Vert_F^2$. The single remaining degree of freedom is an angle $\theta$, and the conditional perturbation is
+$$
+\mathbf{x}(\theta) \;=\; \mathbf{P}_2\mathbf{x} \;+\; \sqrt{T}\,\bigl(\sin\theta\,U_0 + \cos\theta\,U_1\bigr), \qquad \mathbf{x}(\theta_{\mathrm{obs}})=\mathbf{x},
+$$
+with $\theta_{\mathrm{obs}}=\operatorname{atan2}(\Vert\mathbf{P}_0\mathbf{x}\Vert_F,\Vert\mathbf{P}_1\mathbf{x}\Vert_F)$ and $R(\theta)=(m-2)\tan^2\theta$.
+
+**This perturbation is a rotation.** Because $U_0\perp U_1$ are orthonormal, $\mathbf{x}(\theta)$ rotates the data inside the $2$-plane $\operatorname{span}\{U_0,U_1\}$ and fixes its orthogonal complement (which holds $\mathbf{P}_2\mathbf{x}$ and everything else). In the $\{U_0,U_1\}$ basis the in-plane coordinates are rotated by $\delta=\theta-\theta_{\mathrm{obs}}$:
+$$
+\begin{pmatrix}\langle \mathbf{x}(\theta),U_0\rangle_F\\[2pt]\langle \mathbf{x}(\theta),U_1\rangle_F\end{pmatrix}
+=\begin{pmatrix}\cos\delta & \sin\delta\\[2pt]-\sin\delta & \cos\delta\end{pmatrix}
+\begin{pmatrix}\Vert\mathbf{P}_0\mathbf{x}\Vert_F\\[2pt]\Vert\mathbf{P}_1\mathbf{x}\Vert_F\end{pmatrix}.
+$$
+In general (vectorizing $\mathbf{x}\in\mathbb{R}^{nq}$) it is the **Givens rotation** $\mathbf{x}(\theta)=G(\theta-\theta_{\mathrm{obs}})\,\mathbf{x}$,
+$$
+G(\delta) \;=\; \mathbf{I} \;+\; (\cos\delta-1)\bigl(U_0U_0^\top+U_1U_1^\top\bigr) \;+\; \sin\delta\,\bigl(U_0U_1^\top-U_1U_0^\top\bigr),
+$$
+satisfying $G(\delta)U_0=\cos\delta\,U_0-\sin\delta\,U_1$, $G(\delta)U_1=\sin\delta\,U_0+\cos\delta\,U_1$, and $G(\delta)v=v$ for $v\perp\operatorname{span}\{U_0,U_1\}$. Since $G$ is orthogonal it preserves the in-plane radius, so $T$ is held fixed and only the ratio $R$ varies — which is exactly why the test is free of $\sigma$: conditioning on $T$ (complete and sufficient for $\sigma$ under $H_0$) leaves the scale-invariant ratio. Contrast this with the known-$\sigma$ perturbation $\mathbf{x}'(\phi)$ above, which moves only $\Vert\mathbf{P}_0\mathbf{x}\Vert_F$ along a straight line with $\mathbf{P}_1\mathbf{x}$ held fixed.
+
+With $\mathcal{S}=\{\theta\in(0,\pi/2):\text{clustering preserved at }\mathbf{x}(\theta)\}$, the selective $p$-value is $\mathbb{P}\bigl(R(\theta)\ge R \mid \theta\in\mathcal{S}\bigr)$, a truncated $F_{q,(m-2)q}$. The set $\mathcal{S}$ is characterized analytically: the cluster-assignment margins along the fiber are quadratic forms in $(\sin\theta,\cos\theta)$, so $\mathcal{S}$ is a union of arcs (implemented in `sims/rfiber_exact.R`); unioning over the Lloyd paths yields the more-powerful union test.
+
 ### References
 
 Chen YT and Witten DM. (2022+) Selective inference for $k$-means clustering. arXiv preprint. https://arxiv.org/abs/2203.15267.
@@ -97,6 +125,8 @@ Gao, L. L., Bien, J., and Witten, D. (2020). Selective inference for hierarchica
 arXiv:2012.02936.
 
 Lee J, Sun D, Sun Y, Taylor J. Exact post-selection inference, with application to the lasso. Ann Stat. 2016;44(3):907-927. doi:10.1214/15-AOS1371
+
+Yun Y and Barber RF. (2023) Selective inference for clustering with unknown variance. Electronic Journal of Statistics. arXiv:2301.12999.
 
 
 

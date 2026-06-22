@@ -256,6 +256,20 @@ source("sims/kmeans_union_unknownvar.R")   # numerical R-fiber union/path
   rf <- tryCatch(kmeans_union_unknownvar(X, k = cfg$k, cluster_1 = cfg$pair[1],
                    cluster_2 = cfg$pair[2], seed = cfg$init_seed, n_theta = 250, tol = 1e-7),
                  error = function(e) list(p_union = NA_real_, p_path = NA_real_))
+  # PLUG-IN variance (Chen-Witten): recompute the known-var union/path p-value
+  # with sigma_MED and sigma_Sample on the SAME (sigma-independent) truncation
+  # sets -- nearly free (no extra k-means). Iso cells only. Shows "what the exact
+  # F buys over just plugging in an estimate."
+  pmed_u<-pmed_p<-psmp_u<-psmp_p<-NA_real_
+  if (!use_genCov) {
+    ivp <- function(iv, sf) tryCatch(KmeansInference:::.kmeans_interval_pvalue(iv, fit$test_stat, sf, cfg$q),
+                                     error = function(e) NA_real_)
+    sqnu <- fit$scale_factor / (if (is.null(cfg$sig_test)) 1 else cfg$sig_test)^2   # = ||nu||^2
+    s_med  <- KmeansInference:::.kmeans_estimate_MED(X)
+    s_samp <- sqrt(sum(scale(X, center = TRUE, scale = FALSE)^2) / (length(X) - cfg$q))
+    pmed_u <- ivp(fit$interval_union, sqnu*s_med^2);  pmed_p <- ivp(fit$interval_path, sqnu*s_med^2)
+    psmp_u <- ivp(fit$interval_union, sqnu*s_samp^2); psmp_p <- ivp(fit$interval_path, sqnu*s_samp^2)
+  }
 
   data.frame(
     rep            = r,
@@ -265,6 +279,8 @@ source("sims/kmeans_union_unknownvar.R")   # numerical R-fiber union/path
     p_path_unknown  = uv$p_path_unknown,
     p_union_rfib    = rf$p_union,
     p_path_rfib     = rf$p_path,
+    p_union_med     = pmed_u, p_path_med  = pmed_p,   # sigma_MED plug-in
+    p_union_samp    = psmp_u, p_path_samp = psmp_p,   # sigma_Sample plug-in
     test_stat      = fit$test_stat,
     n_paths        = length(fit$paths),
     exhaustive     = fit$exhaustive,
@@ -316,6 +332,8 @@ source("sims/kmeans_union_unknownvar.R")   # numerical R-fiber union/path
   rej_path_unk  <- rej(res$p_path_unknown)   # phi-remap path (valid)
   rej_union_rfib <- rej(res$p_union_rfib)    # R-fiber union (valid, more powerful)
   rej_path_rfib  <- rej(res$p_path_rfib)     # R-fiber path
+  rej_union_med  <- rej(res$p_union_med);  rej_path_med  <- rej(res$p_path_med)   # sigma_MED plug-in
+  rej_union_samp <- rej(res$p_union_samp); rej_path_samp <- rej(res$p_path_samp)  # sigma_Sample plug-in
   ks <- function(p) { p <- p[is.finite(p)]
     if (length(p) >= 2) suppressWarnings(ks.test(p, "punif")$p.value) else NA_real_ }
   ks_union <- NA_real_; ks_path <- NA_real_; ks_path_unk <- NA_real_
@@ -357,6 +375,8 @@ source("sims/kmeans_union_unknownvar.R")   # numerical R-fiber union/path
     rej_union        = rej_union, rej_path = rej_path, rej_naive = rej_naive,
     rej_path_unk     = rej_path_unk,
     rej_union_rfib   = rej_union_rfib, rej_path_rfib = rej_path_rfib,
+    rej_union_med    = rej_union_med, rej_path_med = rej_path_med,
+    rej_union_samp   = rej_union_samp, rej_path_samp = rej_path_samp,
     ks_union         = ks_union,  ks_path  = ks_path, ks_path_unk = ks_path_unk,
     ks_union_rfib    = ks_union_rfib, ks_path_rfib = ks_path_rfib,
     power_gain       = if (n_valid == 0) NA_real_ else (rej_union - rej_path),

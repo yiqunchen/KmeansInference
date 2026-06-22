@@ -14,66 +14,79 @@ read_raw <- function(label) {
   if (!length(fs)) return(NULL)
   do.call(rbind, lapply(fs, function(f) tryCatch(readRDS(f), error = function(e) NULL)))
 }
-qcol <- c("q=2" = "#1F5AA6", "q=10" = "#C98A2E", "q=50" = "#2B7A78", "q=100" = "#9A4D8E")
+qlev <- paste0("q=", c(2, 10, 50, 100))
 
-## Panel A: Type I QQ across q (union p-values vs Uniform) --------------------
+## Panel A: Type I QQ, FACET by q (union p-values vs Uniform) -----------------
+## Single null series = the known-sigma union p-value: colour=oracle (black),
+## linetype=union (dashed); q is the swept dimension -> facet, never colour.
 qq <- do.call(rbind, lapply(c(2, 10, 50, 100), function(q) {
   r <- read_raw(sprintf("cw_typeI_q%d", q)); if (is.null(r) || nrow(r) < 20) return(NULL)
   pu <- sort(r$p_union[is.finite(r$p_union)])
-  data.frame(q = factor(paste0("q=", q), levels = names(qcol)),
+  data.frame(q = factor(paste0("q=", q), levels = qlev),
              theo = ppoints(length(pu)), emp = pu)
 }))
-pA <- ggplot(qq, aes(theo, emp, colour = q)) +
-  geom_abline(slope = 1, linetype = 2, colour = km_ref, alpha = 0.6) +
-  geom_step(linewidth = 0.9) +
-  scale_colour_manual(values = qcol) +
+qq$q <- droplevels(qq$q)
+pA <- ggplot(qq, aes(theo, emp)) +
+  geom_abline(slope = 1, linetype = 2, colour = km_ref, alpha = 0.8) +
+  geom_step(aes(colour = "oracle", linetype = "union"), linewidth = 0.9) +
+  facet_wrap(~ q, nrow = 1) +
+  scale_km_colour() + scale_km_linetype() +
   coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
   labs(x = "Uniform quantile", y = "union p-value (null)",
        title = "Type I calibration") +
-  theme_km() + theme(legend.position = c(0.02, 0.98),
-                     legend.justification = c(0, 1))
+  theme_km()
 
-## Panel B: power vs delta by sigma (known variance), union vs path -----------
+## Panel B: power vs delta (known variance), union vs path; FACET by sigma -----
+## Both curves are known-sigma -> colour=oracle (black); conditioning is the
+## linetype (path solid / union dashed). sigma is the swept dimension -> facet.
 pw <- s[grepl("cw_power", s$label) & s$n_valid >= 40, ]
-scol <- c("0.25" = "#1F5AA6", "0.5" = "#C98A2E", "1" = "#B55D4C")
-mk_long <- function(uy, py, lab) rbind(
-  data.frame(delta = pw$delta, sig = factor(pw$sig), rej = pw[[uy]], method = "union", panel = lab),
-  data.frame(delta = pw$delta, sig = factor(pw$sig), rej = pw[[py]], method = "path",  panel = lab))
-pwk <- mk_long("rej_union", "rej_path", "known")
-pB <- ggplot(pwk, aes(delta, rej, colour = sig, linetype = method, shape = method)) +
-  geom_hline(yintercept = 0.05, linetype = 3, colour = km_ref, alpha = 0.6) +
-  geom_line(linewidth = 0.9) + geom_point(size = 2.4) +
-  scale_colour_manual(values = scol, name = expression(sigma)) +
-  scale_linetype_manual(values = c(union = 1, path = 2)) +
-  scale_shape_manual(values = c(union = 16, path = 17)) +
+pwk <- rbind(
+  data.frame(delta = pw$delta, sig = pw$sig, rej = pw$rej_union,
+             treat = "oracle", cond = "union"),
+  data.frame(delta = pw$delta, sig = pw$sig, rej = pw$rej_path,
+             treat = "oracle", cond = "path"))
+pwk$sigf <- factor(sprintf("sigma == %s", pwk$sig))
+pB <- ggplot(pwk, aes(delta, rej, colour = treat, linetype = cond)) +
+  geom_hline(yintercept = 0.05, linetype = 2, colour = km_ref, alpha = 0.8) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2.4, colour = km_col[["oracle"]]) +
+  facet_wrap(~ sigf, nrow = 1, labeller = label_parsed) +
+  scale_km_colour() + scale_km_linetype() +
   scale_y_continuous(limits = c(0, 1)) +
   labs(x = expression(paste("separation  ", delta)), y = "power",
        title = "Power vs separation (q=10)") +
   theme_km()
 
-## Panel C: known vs unknown variance power (sigma = 0.25), union vs path -----
+## Panel C: known vs unknown variance power, union vs path --------------------
+## colour=treatment: known=oracle (black), unknown=studentized (blue);
+## linetype=conditioning: path solid / union dashed.
 c25 <- pw[pw$sig == 0.25, ]
-if (nrow(c25) >= 2) {
+src <- if (nrow(c25) >= 2) c25 else pw[pw$q == 10, ]   # sig=0.25 absent -> use q=10 slice
+if (nrow(src) >= 2) {
   uv <- rbind(
-    data.frame(delta = c25$delta, rej = c25$rej_union,     method = "union", v = "known"),
-    data.frame(delta = c25$delta, rej = c25$rej_path,      method = "path",  v = "known"),
-    data.frame(delta = c25$delta, rej = c25$rej_union_unk, method = "union", v = "unknown"),
-    data.frame(delta = c25$delta, rej = c25$rej_path_unk,  method = "path",  v = "unknown"))
-  uv$method <- factor(uv$method, levels = c("union", "path"))
-  pC <- ggplot(uv, aes(delta, rej, colour = method, linetype = v, shape = v)) +
+    data.frame(delta = src$delta, rej = src$rej_union,      treat = "oracle",      cond = "union"),
+    data.frame(delta = src$delta, rej = src$rej_path,       treat = "oracle",      cond = "path"),
+    data.frame(delta = src$delta, rej = src$rej_union_rfib, treat = "studentized", cond = "union"),
+    data.frame(delta = src$delta, rej = src$rej_path_rfib,  treat = "studentized", cond = "path"))
+  uv <- uv[is.finite(uv$rej), ]
+  pC <- ggplot(uv, aes(delta, rej, colour = treat, linetype = cond)) +
     geom_line(linewidth = 0.9) + geom_point(size = 2.4) +
-    scale_colour_manual(values = km_pal, labels = km_lab) +
-    scale_linetype_manual(values = c(known = 1, unknown = 2), name = NULL) +
-    scale_shape_manual(values = c(known = 16, unknown = 17), name = NULL) +
+    scale_km_colour() + scale_km_linetype() +
     scale_y_continuous(limits = c(0, 1)) +
     labs(x = expression(paste("separation  ", delta)), y = "power",
-         title = expression(paste("Known vs unknown variance (", sigma, "=0.25)"))) +
+         title = "Known vs unknown variance (q=10)") +
     theme_km()
 } else pC <- ggplot() + theme_void()
 
+## ONE shared bottom legend across the three panels.
 library(grid)
-fig <- arrangeGrob(pA, pB, pC, ncol = 3)
+legC <- km_get_legend(pC + guides(colour = guide_legend(order = 1),
+                                  linetype = guide_legend(order = 2)))
+pA <- pA + theme(legend.position = "none")
+pB <- pB + theme(legend.position = "none")
+pC <- pC + theme(legend.position = "none")
+body <- arrangeGrob(pA, pB, pC, ncol = 3, widths = c(1.35, 1, 1))
+fig <- arrangeGrob(body, legC, ncol = 1, heights = c(10, 1.1))
 fig <- arrangeGrob(fig, top = textGrob(paste0("Chen-&-Witten-faithful, n=150", tag),
                                        gp = gpar(fontface = "bold", cex = 1.0)))
-ggsave_km(fig, "sims/results/cw_panels", width = 14, height = 4.6)
+ggsave_km(fig, "sims/results/cw_panels", width = 15.5, height = 4.8)
 cat("Wrote sims/results/cw_panels.{pdf,png}\n")
