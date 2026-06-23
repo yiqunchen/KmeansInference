@@ -117,7 +117,12 @@ suppressMessages(library(parallel))
 # (Yun-Barber F-pivot in the pivot's own coordinate; the phi-remap union was
 # anti-conservative). The R-fiber version re-explores along x'(r) ~4s/rep.
 source("sims/unknown_var_union.R")
-source("sims/kmeans_union_unknownvar.R")   # numerical R-fiber union/path
+source("sims/kmeans_union_unknownvar.R")         # numerical R-fiber union/path (grid)
+source("sims/kmeans_union_unknownvar_exact.R")   # EXACT R-fiber arc-sweep (no Monte Carlo)
+# R-fiber solver selection: EXACT arc-sweep is the default (paper-grade, no grid
+# error); set KM_RFIBER_SOLVER=numerical to fall back to the 250-point grid
+# solver (e.g. for exact-vs-numerical A/B comparison).
+.rfiber_exact <- !identical(Sys.getenv("KM_RFIBER_SOLVER"), "numerical")
 
 # ---- config defaults & merge ----------------------------------------------
 .default_cfg <- function() list(
@@ -252,10 +257,17 @@ source("sims/kmeans_union_unknownvar.R")   # numerical R-fiber union/path
   # anti-conservative, removed).
   uv <- tryCatch(unknown_var_from_fit(fit, X, cfg$pair[1], cfg$pair[2]),
                  error = function(e) list(p_path_unknown = NA_real_))
-  # VALID more-powerful unknown-variance UNION (and path) on the R-fiber.
-  rf <- tryCatch(kmeans_union_unknownvar(X, k = cfg$k, cluster_1 = cfg$pair[1],
+  # VALID more-powerful unknown-variance UNION (and path) on the R-fiber. Default
+  # to the EXACT arc-sweep solver (no Monte Carlo / no grid error); the numerical
+  # grid solver remains available via KM_RFIBER_SOLVER=numerical.
+  rf <- tryCatch(
+    if (.rfiber_exact)
+      kmeans_union_unknownvar_exact(X, k = cfg$k, cluster_1 = cfg$pair[1],
+                   cluster_2 = cfg$pair[2], seed = cfg$init_seed, eps = 1e-7)
+    else
+      kmeans_union_unknownvar(X, k = cfg$k, cluster_1 = cfg$pair[1],
                    cluster_2 = cfg$pair[2], seed = cfg$init_seed, n_theta = 250, tol = 1e-7),
-                 error = function(e) list(p_union = NA_real_, p_path = NA_real_))
+    error = function(e) list(p_union = NA_real_, p_path = NA_real_))
   # PLUG-IN variance (Chen-Witten): recompute the known-var union/path p-value
   # with sigma_MED and sigma_Sample on the SAME (sigma-independent) truncation
   # sets -- nearly free (no extra k-means). Iso cells only. Shows "what the exact

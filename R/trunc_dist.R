@@ -44,7 +44,7 @@ finiteE <- function(E) {
 
 #' Make endpoints of intervals positive
 #'
-#' This function modifies a union of intervals with possibly negative enpoints
+#' This function modifies a union of intervals with possibly negative endpoints
 #'     into a union of intervals with \emph{positive} endpoints, while ensuring
 #'    the probability of a \eqn{N(0, 1)} falling into it numerically the same.
 #'
@@ -284,7 +284,7 @@ TChisqRatioApprox <- function(df, E1, E2) {
 
   # the transform that makes x into a N(0, 1) r.v. such that
   # P(X >= x) = P(Z >= Chisq2N(x)), X ~ chisq(df), Z ~ N(0, 1)
-  # this function can take either scaler, vector or matrix
+  # this function can take either a scalar, vector or matrix
   Chisq2N <- function(x, df, tol = 1e-6) {
 
     if (is.numeric(x) && length(x) == 1) {

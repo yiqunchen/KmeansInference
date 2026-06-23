@@ -24,7 +24,7 @@ kmeans_inference(
 
 \item{k}{Integer; the number of clusters for k-means clustering}
 
-\item{cluster_1, cluster_2}{Two different integers in {1,...,k}; two estimated clusters to test, as indexed by the results of
+\item{cluster_1, cluster_2}{Two different integers in \eqn{\{1,\ldots,k\}}; two estimated clusters to test, as indexed by the results of
 \code{kmeans_estimation}.}
 
 \item{iso}{Boolean. If TRUE, an isotropic covariance matrix model is used.}
@@ -40,6 +40,8 @@ relevant if \code{iso}=TRUE. If it's not given as input, a median-based estimato
 
 \item{tol_eps}{A small number specifying the convergence criterion for k-means clustering,
 default to \code{1e-6}.}
+
+\item{verbose}{Boolean; currently reserved for compatibility.}
 }
 \value{
 Returns a list with the following elements:
@@ -64,7 +66,7 @@ Consider the generative model \eqn{X ~ MN(\mu,I_n,\sigma^2 I_q)}. First recall t
 solves the following optimization problem
 \deqn{ \sum_{k=1}^K \sum_{i \in C_k} \big\Vert x_i - \sum_{i \in C_k} x_i/|C_k| \big\Vert_2^2 , }
  where \eqn{C_1,..., C_K} forms a partition of the integers \eqn{1,..., n}, and can be regarded as
- the estimated clusters of the original observations. Lloyd's algorithm is an iterative apparoach to solve
+ the estimated clusters of the original observations. Lloyd's algorithm is an iterative approach to solve
  this optimization problem.
 Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
 are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
@@ -75,7 +77,7 @@ This function computes the following p-value:
   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \{ c_i^{(t)}(X) =
  c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y \Big),}
 where \eqn{c_i^{(t)}} is the is the cluster to which the \eqn{i}th observation is assigned during the \eqn{t}th iteration of
-the Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
+Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
 In particular, the test based on this p-value controls the selective Type I error and has substantial power.
 Readers can refer to the Sections 2 and 4 in Chen and Witten (2022+) for more details.
 }

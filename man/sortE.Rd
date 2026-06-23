@@ -14,7 +14,7 @@ a union of intervals with \emph{positive} but possibly infinite endpoints.}
 This function returns an "Intervals" object or a matrix depending on the input.
 }
 \description{
-This function modifies a union of intervals with possibly negative enpoints
+This function modifies a union of intervals with possibly negative endpoints
     into a union of intervals with \emph{positive} endpoints, while ensuring
    the probability of a \eqn{N(0, 1)} falling into it numerically the same.
 }

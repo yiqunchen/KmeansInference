@@ -29,7 +29,7 @@ knitr::opts_chunk$set(
 
 We consider the problem of testing for a difference in means between clusters of observations identified via $k$-means clustering, an extremely popular clustering algorithm with numerous applications. In this setting, classical hypothesis tests lead to an inflated Type I error rate, because the clusters were obtained on the same data used for testing. To overcome this problem, we propose a selective inference approach in our manuscript and describe an efficient algorithm to compute a finite-sample p-value that controls the selective Type I error for a test of the difference in means between a pair of clusters obtained using $k$-means clustering. 
 
-In this tutorial, we provide an overview of our selective inference approach. Details for the computationally-efficient implementation of our proposed p-value can be found in Section 3 of our manuscript, available at arXiv_link_here. 
+In this tutorial, we provide an overview of our selective inference approach. Details for the computationally-efficient implementation of our proposed p-value can be found in Section 3 of our manuscript, available at https://arxiv.org/abs/2203.15267.
 
 ### Model setup
 We consider the following simple and well-studied model for $n$ observations and $q$ features:
@@ -127,7 +127,6 @@ arXiv:2012.02936.
 Lee J, Sun D, Sun Y, Taylor J. Exact post-selection inference, with application to the lasso. Ann Stat. 2016;44(3):907-927. doi:10.1214/15-AOS1371
 
 Yun Y and Barber RF. (2023) Selective inference for clustering with unknown variance. Electronic Journal of Statistics. arXiv:2301.12999.
-
 
 
 

@@ -68,16 +68,17 @@ discards power. We make three contributions. First, following the
 optimality theory of \citet{fithian2017optimal}, we propose a test that
 conditions only on the event that the two \emph{tested} clusters are preserved,
 taken as a union over all Lloyd paths that produce them; this enlarges the
-truncation set and is uniformly more powerful, with the gain widening as the
-number of clusters $K$ grows. Second, when the noise variance is unknown, we
-develop an exact studentized test built on a Fisher--$F$ pivot, generalizing
-\citet{yun2023unknownvar} from $K=2$ to arbitrary $K$ and eliminating their
+truncation set and is uniformly more powerful, the gain generally larger for more
+clusters $K$. Second, the same test extends to unknown noise variance: we
+studentize, replacing the $\chi$ statistic with a Fisher--$F$ in which $\sigma$
+cancels, and characterize the conditioning set exactly for any $K$, generalizing
+\citet{yun2023unknownvar} from $K=2$ and eliminating their
 Monte Carlo step; the test requires no estimate of $\sigma$ at all. Third, we
 give a fast numerical/analytic solver for the quadratic truncation inequalities
 that define the conditioning set
 \citep{yun2024multiplepairs}. In simulations the union test controls the
-selective Type I error (rejection rate $0.035$--$0.045$ at the global null versus
-$0.975$ for the naive test) while substantially improving power, and a head-to-head
+selective Type I error (rejection rate near the nominal $0.05$ at the global null
+versus $0.975$ for the naive test) while substantially improving power, and a head-to-head
 comparison against data thinning \citep{neufeld2024datathin} shows that our
 studentized test detects real clusters far more often --- because data thinning
 must spend half the data on the test fold and must estimate $\sigma$ to perform
@@ -124,16 +125,17 @@ power.
         \citet{chen2023gfl} used for the graph fused lasso, and is justified by
         the selective-optimality framework of \citet{fithian2017optimal}. The
         resulting truncation set is a superset of the path set, so the test is
-        uniformly more powerful; empirically the power gain over the path test
-        widens with the number of clusters $K$.
-  \item \textbf{An exact studentized test for unknown variance}
-        (Section~\ref{sec:rfiber}). Following \citet{yun2023unknownvar} we
-        studentize, obtaining an $F$ pivot in which $\sigma$ cancels. We
-        characterize the conditioning set \emph{exactly} on the
-        ``$R$-fiber'' --- a one-parameter rotation of the data at fixed total
-        energy --- for any $K$, replacing the importance sampling that
-        \citet{yun2023unknownvar} require for $K>2$ with an exact, zero-variance
-        $p$-value.
+        uniformly more powerful; empirically the power gain over the path test is
+        generally larger for more clusters $K$.
+  \item \textbf{The same test when $\sigma$ is unknown}
+        (Section~\ref{sec:rfiber}). Both the path and union tests extend to
+        unknown variance with a single change --- the statistic. Following
+        \citet{yun2023unknownvar} we studentize, replacing the $\chi$ statistic
+        with an $F$ in which $\sigma$ cancels, and we characterize the
+        conditioning set \emph{exactly} for any $K$ --- by perturbing the data so
+        that only the studentized statistic varies --- replacing the importance
+        sampling that \citet{yun2023unknownvar} require for $K>2$ with an exact,
+        zero-variance $p$-value.
   \item \textbf{A fast solver} (Section~\ref{sec:computation}). The conditioning
         set is the solution set of a collection of quadratic inequalities in the
         perturbation parameter; we compute the coefficients analytically and
@@ -216,9 +218,10 @@ carries the contrast, with $\Fnorm{\Pp_0\X}=\norm{\X^\top\bnu}_2/\norm\bnu_2$;
 (ii) the \emph{within-cluster} centering projection $\Pp_1$ of the two tested
 clusters (rank $m-2$, with $m=|\hat\Cset_1|+|\hat\Cset_2|$) carries the
 within-cluster scatter; and (iii) the \emph{nuisance} $\Pp_2=\mathbf I-\Pp_0-\Pp_1$.
-The path test moves only $\Fnorm{\Pp_0\X}$ along a ray, holding $\Pp_1\X$ and
-$\Pp_2\X$ fixed; Figure~\ref{fig:decomposition} contrasts this with the
-studentized test of Section~\ref{sec:rfiber}.
+The path and union tests move only $\Fnorm{\Pp_0\X}$ along the contrast, holding
+$\Pp_1\X$ and $\Pp_2\X$ fixed; the studentized test of
+Section~\ref{sec:rfiber} instead varies the ratio of the two
+(Figure~\ref{fig:decomposition}).
 
 \textbf{Why the path test loses power.} Conditioning on the whole path is
 \emph{sufficient} for validity but not \emph{necessary}: the hypothesis depends
@@ -257,16 +260,21 @@ condition on the \emph{tested object} (here, the two clusters) instead of the
 \emph{algorithmic trace} (the Lloyd path).
 
 \subsection{Validity}
-The union set is, like the path set, a function of $\phi$ alone along the
-perturbation line (everything orthogonal to the contrast is held fixed), so
-$\phi \mid \phi\in\Sset_{\mathrm{union}}$ is again a truncated scaled-$\chi_q$
-and the test controls the selective Type I error.
-% TODO: state and prove this as a formal proposition (the conditioning event is
-% a deterministic function of phi; truncated-chi remains a valid pivot under any
-% phi-measurable conditioning set). Mirror Prop 1 of Chen, Jewell & Witten (2023).
-Empirically, at the global null the union test rejects at rate $0.045$
-(KS-uniform), versus $0.975$ for the naive test
-(Table~\ref{tab:typeI}; \texttt{power\_type1\_summary.rds}).
+\begin{proposition}\label{prop:union}
+Along the perturbation $\x'(\phi)$ the event $\{\x'(\phi)\text{ preserves both
+}\hat\Cset_1\text{ and }\hat\Cset_2\}$ is a deterministic function of $\phi$, so
+$\Sset_{\mathrm{union}}$ is a fixed (data-dependent) subset of $[0,\infty)$.
+Conditional on $\phi\in\Sset_{\mathrm{union}}$ and on the nuisance coordinates,
+$\phi\sim(\sigma\norm\bnu_2)\,\chi_q$ truncated to $\Sset_{\mathrm{union}}$; hence
+$p_{\mathrm{union}}$ is super-uniform under $H_0$.
+\end{proposition}
+The argument is exactly the one that validates the path test: any conditioning
+event that is a function of $\phi$ alone leaves the truncated-$\chi$ pivot intact
+(everything orthogonal to the contrast is held fixed), and
+$\Sset_{\mathrm{union}}\supseteq\Sset_T$ only enlarges the truncation set, so the
+test stays valid while gaining power. Empirically the union test is calibrated at
+the global null (Section~\ref{sec:sims}), against a rejection rate of $0.975$ for
+the naive test.
 
 \subsection{Construction of the union set}
 We enumerate the distinct Lloyd paths reachable along the perturbation line as
@@ -294,11 +302,13 @@ beyond the observed statistic. This leaves the $p$-value essentially unchanged
 exploration.
 
 % ===========================================================================
-\section{Unknown variance: the studentized $R$-fiber}
+\section{Unknown variance: the same test, studentized}
 \label{sec:rfiber}
 % ===========================================================================
 
 \subsection{The $F$ pivot}
+Nothing about the conditioning changes when $\sigma$ is unknown --- we still test
+the path or the union of preserved-cluster events --- only the statistic does.
 When $\sigma$ is unknown we cannot compare $\norm{\x^\top\bnu}_2$ to a scaled
 $\chi_q$, because the scale is exactly what we lack. Following
 \citet{yun2023unknownvar} we studentize. Using the decomposition of
@@ -315,20 +325,25 @@ where $m=|\hat\Cset_1|+|\hat\Cset_2|$ counts only the two tested clusters and th
 unknown $\sigma$ cancels. The required null is the slightly stronger
 \emph{pointwise} null $H_0'$: within each tested cluster the means $\bmu_i$ are
 equal to the cluster mean (so that $\Fnorm{\Pp_1\X}^2$ is a clean noise estimate).
-This is the price of not knowing $\sigma$.
-% TODO: discuss H0' vs H0 explicitly and note the adversarial finding: broad-null-
-% but-not-pointwise violations (equal cluster means, canceling +/- sub-populations)
-% only inflate the denominator ||P1X||, so the test is CONSERVATIVE; anti-
-% conservatism requires within-cluster heterogeneity to deflate ||P1X|| under a
-% TRUE mean difference, which k-means tends to resolve by spending a cluster.
-% (source: union-method-status.md)
+This is the price of not knowing $\sigma$. Relative to $H_0$ (equal cluster
+means), $H_0'$ additionally asks for within-cluster mean homogeneity. A violation
+that still satisfies $H_0$ --- for instance canceling $\pm$ sub-populations with
+equal cluster means --- only \emph{inflates} the denominator $\Fnorm{\Pp_1\X}^2$,
+making the test \emph{conservative}; anti-conservativity would instead require
+within-cluster heterogeneity that \emph{deflates} $\Fnorm{\Pp_1\X}^2$ under a true
+mean difference, a configuration $k$-means tends to resolve by spending a cluster.
+We therefore treat $H_0'$ as a benign strengthening of $H_0$ in practice.
 
-\subsection{The rotation and the fiber}
-We condition on the clustering, on $\Pp_2\X$, on the unit directions
-$U_0=\Pp_0\X/\Fnorm{\Pp_0\X}$ and $U_1=\Pp_1\X/\Fnorm{\Pp_1\X}$ (which are
-orthonormal), and on the \emph{total energy}
-$T = \Fnorm{\Pp_0\X}^2+\Fnorm{\Pp_1\X}^2$. The single remaining degree of freedom
-is an angle $\theta$, and the conditional perturbation is
+\subsection{Conditioning when $\sigma$ is unknown}
+The conditioning set is built the same way as before --- we ask which
+perturbations of the data preserve the tested clusters --- but the perturbation
+must now hold fixed everything the $F$ statistic treats as nuisance and vary
+\emph{only} the ratio $R$. Concretely we condition on the clustering, on
+$\Pp_2\X$, on the unit directions $U_0=\Pp_0\X/\Fnorm{\Pp_0\X}$ and
+$U_1=\Pp_1\X/\Fnorm{\Pp_1\X}$ (which are orthonormal), and on the
+\emph{total sum of squares} $T = \Fnorm{\Pp_0\X}^2+\Fnorm{\Pp_1\X}^2$. The single
+remaining degree of freedom is an angle $\theta$, and the conditional
+perturbation is
 \begin{equation}
   \x(\theta) \;=\; \Pp_2\x \;+\; \sqrt{T}\,\big(\sin\theta\,U_0 + \cos\theta\,U_1\big),
   \qquad \x(\theta_{\mathrm{obs}})=\x,
@@ -346,58 +361,53 @@ complement,
 \end{equation}
 Since $G$ is orthogonal it preserves the in-plane radius, so $T$ is held fixed and
 only the ratio $R$ varies --- which is precisely why the test is free of $\sigma$:
-$T$ is complete and sufficient for $\sigma$ under $H_0'$ (Basu's theorem), so the
-scale-invariant ratio $R$ is ancillary to it. Contrast this with the known-$\sigma$
-ray $\x'(\phi)$, which moves $\Fnorm{\Pp_0\X}$ in a straight line while
-$\Pp_1\X$ stays put. The two slices are drawn in Figure~\ref{fig:decomposition}:
-the known-$\sigma$ test walks a horizontal ray (fix within-scatter, vary
-separation $\to\chi$), the studentized test walks an arc (fix total energy, vary
-the angle $\to F$).
+under $H_0'$, $T$ is complete and sufficient for $\sigma$ while $R$ is
+scale-ancillary, so Basu's theorem gives $R\perp T$ and conditioning on $T$
+removes $\sigma$. This is the \emph{only} change from the known-$\sigma$ tests,
+which instead move along the contrast --- varying the separation
+$\Fnorm{\Pp_0\X}$ while the within-cluster scatter $\Pp_1\X$ stays put.
+Figure~\ref{fig:decomposition} draws the two: the known-$\sigma$ tests vary the
+separation ($\to\chi$), the studentized test varies the ratio at fixed total
+$T$ ($\to F$). Geometrically, fixing $T$ confines the data to a sphere of
+radius $\sqrt T$ on which the studentized perturbation rotates at fixed radius,
+so its statistic depends only on the rotation angle $\theta$
+($R=(m-2)\tan^2\theta$).
 
-\paragraph{Geometry.} Datasets of fixed energy $T$ lie on a sphere of radius
-$\sqrt T$. The pole ($\theta=\pi/2$) is all separation (within-scatter $0$), the
-equator ($\theta=0$) is fully merged clusters (no separation), the latitude is
-$\theta$ (and $R=(m-2)\tan^2\theta$ depends only on latitude), and the longitude
-indexes the within-scatter pattern. Our test fixes the longitude and sweeps
-$\theta$: it walks a single meridian, the latitude playing the role of the test
-statistic.
-
-\subsection{The truncated-$F$ test and the union}
+\subsection{Path and union, studentized}
 With $\Sset = \{\theta\in(0,\pi/2):\text{the clustering is preserved at }\x(\theta)\}$,
 the selective $p$-value is the truncated-$F$ probability
 \begin{equation}
   p = \Prob\big(R(\theta)\ge R \mid \theta\in\Sset\big),
   \qquad R\sim F_{q,(m-2)q}.
 \end{equation}
-The cluster-assignment margins $\norm{x_i-m_j}^2-\norm{x_i-m_k}^2$ along the
-fiber are quadratic forms in $(\sin\theta,\cos\theta)$, so $\Sset$ is a union of
-arcs computed exactly (Section~\ref{sec:computation}). Unioning the arcs across
-all Lloyd paths that preserve the two tested clusters yields the more powerful
-union version --- and, crucially, this union is computed \emph{on the same
-$R$-fiber}, so the truncated-$F$ remains a valid pivot over it.
+The cluster-assignment margins $\norm{x_i-m_j}^2-\norm{x_i-m_k}^2$ are quadratic
+in $(\sin\theta,\cos\theta)$, so $\Sset$ is a union of intervals of $\theta$
+computed exactly (Section~\ref{sec:computation}). Conditioning on the observed
+interval alone gives the studentized \emph{path} test; taking the union of the
+intervals across all Lloyd paths that preserve the two tested clusters gives the
+studentized \emph{union} test --- exactly the path-versus-union choice of
+Section~\ref{sec:union}, now in the coordinate $\theta$. Both are formed in that
+single coordinate, so the truncated-$F$ stays a valid pivot.
 
-\paragraph{An important caveat: do not remap the known-$\sigma$ union.}
-A natural shortcut is to take the known-$\sigma$ $\phi$-union set and feed it,
-re-scaled, into the $F$ pivot. This is \emph{invalid}: the studentized-$F$ pivot
-holds only \emph{per Lloyd path}, and the per-path truncated-$F$'s do not
-aggregate into a union-$F$ unless the union is taken in the $F$ pivot's own
-coordinate. Along the $\phi$-ray the within-scatter $\Fnorm{\Pp_1\X}$ is held
-fixed, but along the $R$-fiber it varies, so the per-path cancellation that makes
-$R$ pivotal breaks when one imports the $\phi$-fiber's set. Exhaustive
-simulation confirms the remapped union over-rejects (rejection $0.081$,
-scaling with union width from $0.010$ up to $0.170$), whereas the same union taken
-on the $R$-fiber is calibrated. The valid construction perturbs along the
-$R$-fiber \eqref{eq:fiber} and unions the $\theta$-arcs, so that
-$\{\text{clusters preserved}\} = \{R\in\Sset'\}$ is a function of $R$ alone and
-the union of a one-dimensional truncation is exact.
-% TODO: this caveat is methodologically central -- decide how much to foreground
-% it. It is the single most error-prone part of the method.
+\paragraph{The union must be formed in the studentized statistic's own coordinate.}
+A tempting shortcut is to reuse the known-$\sigma$ conditioning set --- rescaled ---
+inside the $F$ pivot. This is \emph{invalid}. That set was traced by perturbations
+along the contrast, which hold the within-cluster scatter $\Fnorm{\Pp_1\X}$ fixed;
+but the studentized $F$ uses $\Fnorm{\Pp_1\X}^2$ to estimate $\sigma$, and the
+per-cluster cancellation that makes $R$ pivotal relies on that scatter being free
+to vary with $R$. The $F$ is therefore not a valid pivot over the imported set:
+the per-path truncated-$F$'s aggregate into a union-$F$ only when the union is
+taken among the perturbations \eqref{eq:fiber} that hold $T$ fixed, where
+$\{\text{clusters preserved}\}=\{R\in\Sset'\}$ is a function of $R$ alone and the
+union of a one-dimensional truncation is exact. Exhaustive simulation confirms the
+rescaled import over-rejects (rejection $0.081$, growing with the set's width from
+$0.010$ up to $0.170$), whereas the union formed correctly is calibrated.
 
 \paragraph{Generalizing Yun and Barber to any $K$.}
 For $K=2$ the two tested clusters are all the data ($m=n$) and
 \citet{yun2023unknownvar} compute the truncation set exactly by reusing
 \citet{chen2023kmeans}. For $K>2$ they resort to importance sampling. Our exact
-$R$-fiber solver computes the arc set exactly for any $K$, so it
+solver computes the conditioning set exactly for any $K$, so it
 (i) replaces their Monte Carlo with an exact, zero-variance $p$-value for $K>2$
 $k$-means (even for the path test), and (ii) yields the more powerful union for
 free. The method is $k$-means-specific (theirs applies to general clustering,
@@ -408,14 +418,14 @@ The union's power gain is largely a \emph{known-variance} phenomenon. A one-side
 truncated $p$-value shrinks when enlarging the truncation set only if the added
 mass lands \emph{below} the observed statistic. For the known-$\sigma$ $\chi$
 statistic, alternative Lloyd paths tolerate smaller separation and so extend the
-$\phi$-interval downward, below the observed value --- producing large gains. For
-the studentized $F$, $k$-means has \emph{minimized} the within-scatter
+conditioning interval downward, below the observed value --- producing large
+gains. For the studentized $F$, $k$-means has \emph{minimized} the within-scatter
 $\Fnorm{\Pp_1\X}$, pinning $R_{\mathrm{obs}}$ against its low-$R$ floor, so the
 extra room is almost entirely \emph{above} the observed statistic and the union
 $p$-value $\approx$ the path $p$-value. In short, the union's leverage is
 \emph{scale} (contrast-length) information, which a scale-free statistic discards.
-This is why we report the union gain primarily under known $\sigma$
-(Figure~\ref{fig:cwpower}) and report the studentized test primarily as the
+This is why the union gain shows up primarily under known $\sigma$
+(Figure~\ref{fig:cwpower}) while the studentized test earns its place as the
 $\sigma$-free route to validity and to the Yun--Barber power regime
 (Figure~\ref{fig:yunbarber}).
 
@@ -427,32 +437,30 @@ $\sigma$-free route to validity and to the Yun--Barber power regime
 Both conditioning sets reduce to solving quadratic inequalities in a single
 perturbation parameter.
 
-\paragraph{Known $\sigma$ ($\phi$-ray).} Along $\x'(\phi)$ each $k$-means
+\paragraph{Known $\sigma$.} Along $\x'(\phi)$ each $k$-means
 assignment margin is a quadratic in $\phi$, so the per-path preservation set is
 the intersection of $O(nKT)$ quadratic inequalities, computed in closed form, and
 the union set is assembled by the endpoint-probing sweep of
 Section~\ref{sec:union}.
 
-\paragraph{Unknown $\sigma$ ($R$-fiber).} Along $\x(\theta)$ each assignment
+\paragraph{Unknown $\sigma$.} Along $\x(\theta)$ each assignment
 margin is an exact quadratic form
 $Q(a,b)=Aa^2+Bb^2+Cab+Da+Eb+F_c$ in $(a,b)=(\sin\theta,\cos\theta)$.
 Substituting $t=\tan(\theta/2)$ turns $Q(\sin\theta,\cos\theta)(1+t^2)^2$ into a
-\emph{quartic} $N(t)$, whose real roots in $[0,1]$ give the arc breakpoints; the
-sign of $Q$ at a midpoint decides which arcs satisfy the inequality, and
-intersecting over all margins yields the arc set for one Lloyd trajectory
-(\texttt{sims/rfiber\_exact.R}). The truncated-$F$ mass over the resulting
-$r$-intervals is computed in a cancellation-proof way (taking the maximum of the
-CDF-difference and the survival-difference, the latter stable in the extreme
-upper tail under strong separation). The solver is modular and unit-tested:
-$23$ tests for the $F$-region routine (including agreement with Monte Carlo and
-extreme-tail underflow), and the arc assembler passes its trajectory-preservation
-unit tests; the truncated-$F$ pivot is verified uniform under fixed truncation.
-% TODO: confirm the exact unit-test counts before publication. union-method-status.md
-% records 14/14 for the 7 primitive modules, 18/18 for the path_arc assembler,
-% and figure-system.md records 23/23 for the F-region solver (sims/test_f_region.R).
+\emph{quartic} $N(t)$, whose real roots in $[0,1]$ give the breakpoints in
+$\theta$; the sign of $Q$ at a midpoint decides which segments satisfy the
+inequality, and intersecting over all margins yields the preserved set for one
+Lloyd trajectory (\texttt{sims/rfiber\_exact.R}). The truncated-$F$ mass over the
+resulting $R$-intervals is computed in a cancellation-proof way (taking the
+maximum of the CDF-difference and the survival-difference, the latter stable in
+the extreme upper tail under strong separation). The solver is modular and
+unit-tested: $23/23$ tests for the $F$-region routine (including agreement with
+Monte Carlo and extreme-tail underflow), $14/14$ for the seven primitive
+geometric modules, and $18/18$ for the trajectory assembler; the truncated-$F$
+pivot is verified uniform under fixed truncation.
 A pure interval/scan implementation also computes the set without analytic
 quartics, agreeing with the exact solver where the grid is fine and finding more
-arcs where the grid is coarse; numerically these two solvers agree.
+segments where the grid is coarse.
 The same numerical-solver idea underlies the multiple-pairs extension of
 \citet{yun2024multiplepairs}.
 
@@ -466,64 +474,35 @@ $k$-means uses a fixed shared initialization. We report rejection rates at level
 $0.05$.
 
 \subsection{Type I error}
-At the global null ($\bmu=\bm 0$) the union, path, and studentized tests are all
-calibrated, while the naive test is invalid. From the global-null cell of
-\texttt{power\_type1\_summary.rds} ($200$ replicates), the union rejects at
-$0.045$ and the path at $0.060$; the naive test rejects at $0.975$
-(Table~\ref{tab:typeI}). The studentized $R$-fiber test is likewise calibrated
-across $q\in\{2,10,50,100\}$ (Type I $0.047/0.046/0.029/0.054$; slightly
-conservative at high $q$). Under AR$(0.5)$/AR$(0.9)$ covariance the
+At the global null ($\bmu=\bm 0$) every selective test is calibrated while the
+naive test is invalid (Figure~\ref{fig:typeIqq}): the selective $p$-values track
+the $45^\circ$ line, the naive $p$-values collapse below it. Across
+$q\in\{2,10,50,100\}$ the known-$\sigma$ path/union reject at $0.032$--$0.063$ and
+the studentized test at $0.034$--$0.058$ (slightly conservative at $q=50$), against
+a naive rejection rate of $0.99$--$1.00$. Under AR$(0.5)$/AR$(0.9)$ covariance the
 general-covariance union and path remain on the diagonal while the naive test
-flatlines (Figure~\ref{fig:gencov}). Under heavy-tailed $t_5$/$t_{10}$ noise the
+flatlines (Figure~\ref{fig:gencov}); under heavy-tailed $t_5$/$t_{10}$ noise the
 studentized test is fairly robust, with mild anti-conservatism only for the
 heaviest tails (Figure~\ref{fig:heavytail}).
 
-\begin{table}[t]
-\centering
-\caption{Selective Type I error at the global null ($\bmu=\bm 0$).
-Rejection rates at level $0.05$. The naive test is grossly invalid; the
-selective tests are calibrated. Known-$\sigma$ union/path from
-\texttt{power\_type1\_summary.rds} ($n=20K$, $q=2$, $200$ reps); studentized
-($R$-fiber) and data-thinning columns from the null cell of
-\texttt{datathin\_compare.rds} ($K=3$, $q=2$, $400$ reps).}
-\label{tab:typeI}
-\begin{tabular}{lccccc}
-\toprule
- & naive & path (known) & union (known) & studentized $F$ & data thinning (oracle) \\
-\midrule
-rejection rate & 0.975 & 0.045--0.060 & 0.035--0.045 & 0.040 & 0.065 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Power: union versus path (known $\sigma$)}
+\subsection{Power: union versus path}
 \label{sec:powersim}
-Table~\ref{tab:power} reports power for the known-$\sigma$ union and path tests as
-a function of the separation $\delta$ (from \texttt{power\_type1\_summary.rds}).
-The union is uniformly more powerful, with gains of order $0.1$--$0.3$; averaged
-over $\delta>0$ the union improves on the path by about $16.8$ percentage points.
-The gain \emph{widens with $K$}: at $\delta=5$, $q=2$ the union's advantage over
-the path is $0.075/0.115/0.225/0.200$ for $K=2/3/4/5$. This is a distinctive
-feature of our exact solver, which handles any $K$.
-% TODO: the K=2..5 gains come from figure-system.md (the dropped varying_k figure,
-% now folded into standard_sweep). Confirm against sims/results/standard_sweep data
-% before final.
-
-\begin{table}[t]
-\centering
-\caption{Power of the known-$\sigma$ union vs.\ path test against separation
-$\delta$ ($n=20K$, $q=2$, $K=3$; \texttt{power\_type1\_summary.rds}, $200$ reps).
-The union is uniformly more powerful. Figure~\ref{fig:cwpower}.}
-\label{tab:power}
-\begin{tabular}{lccccccc}
-\toprule
-$\delta$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 \\
-\midrule
-union & 0.045 & 0.075 & 0.195 & 0.445 & 0.660 & 0.910 & 0.925 \\
-path  & 0.060 & 0.060 & 0.085 & 0.230 & 0.415 & 0.645 & 0.770 \\
-\bottomrule
-\end{tabular}
-\end{table}
+Figure~\ref{fig:cwpower} plots power against the separation $\delta$, faceted by
+$q$. The known-$\sigma$ union (dashed) is uniformly more powerful than the path
+(solid), with gains of order $0.1$--$0.4$ (e.g.\ at $q=2$, $\delta=4$ the union
+rejects $0.795$ versus the path's $0.400$); averaged over $\delta>0$ the union
+improves on the path by about $16.6$ percentage points. The gain is
+\emph{generally larger for larger $K$}: at $\delta=5$, $q=2$ the union's advantage
+over the path is $0.075/0.115/0.225/0.200$ for $K=2/3/4/5$
+(\texttt{sims/results/sweep\_standard}), a distinctive feature of our exact solver,
+which handles any $K$. Following \citet{chen2023kmeans} we separate
+\emph{detection probability} (whether $k$-means recovers the two true clusters)
+from \emph{conditional power} (rejection given detection); the union gain persists
+conditionally, confirming it is a property of the test, not the clustering
+(Figure~\ref{fig:detection}). As anticipated in Section~\ref{sec:rfiber}, the
+studentized union and path nearly coincide --- the union's leverage is studentized
+away --- so under unknown $\sigma$ the contribution is the validity and power of
+the studentized test itself, not a union-over-path improvement.
 
 \subsection{Unknown variance: reproducing the Yun--Barber regime}
 We reproduce the equilateral-triangle, $K=3$, $q\in\{2,10\}$ design of
@@ -553,10 +532,10 @@ pair less often. \emph{Second}, to perform the split it needs a variance: the
 oracle ($\sigma^2$) is unavailable in practice, and any plug-in is inflated under
 cluster separation, which poisons both folds.
 
-Table~\ref{tab:datathin} reports the head-to-head, per-replicate matched, on a
-$K=3$ equilateral-triangle design ($q=2$, $n_{\mathrm{per}}=10$,
-$\varepsilon=0.5$; \texttt{datathin\_compare.rds}, null $400$ reps, signal $220$
-reps each). Three things stand out. (i) At the global null all selective tests
+Figures~\ref{fig:datathin} and~\ref{fig:datathinsigma} report the head-to-head,
+per-replicate matched, on a $K=3$ equilateral-triangle design ($q=2$,
+$n_{\mathrm{per}}=10$, $\varepsilon=0.5$; \texttt{datathin\_compare.rds}, null
+$400$ reps, signal $220$ reps each). Three things stand out. (i) At the global null all selective tests
 and oracle thinning control Type I; the plug-in thinning variants are slightly
 anti-conservative ($0.075$ for the MED split). (ii) \emph{Detection probability}
 --- whether the clustering recovers the true pair --- is far higher for the
@@ -577,53 +556,8 @@ selective \emph{and} thinning --- tracks the $45^\circ$ line while the naive tes
 plunges below it, and panels~B--C plot detection probability and conditional
 power against $\delta$.
 
-\begin{figure}[t]\centering
-  \includegraphics[width=\textwidth]{datathin.png}
-  \caption{Data thinning vs.\ the selective tests, all three metrics in the
-  paper's shared grammar (colour $=$ variance handling; line style $=$ paradigm,
-  selective solid vs.\ data thinning dashed). \textbf{A:} Type I calibration as a
-  QQ plot against the uniform --- every valid method, selective \emph{and}
-  thinning, tracks the $45^\circ$ line, while the naive test (orange) plunges
-  below it. \textbf{B:} detection probability vs.\ separation $\delta$ ---
-  full-data selective clustering (solid black) dominates the thinned splits, and
-  the plug-in splits ($\hat\sigma_{\mathrm{MED}}$ green, $\hat\sigma_{\mathrm{sample}}$
-  vermilion) collapse because the variance estimate is inflated by the very
-  separation being tested. \textbf{C:} conditional power vs.\ $\delta$ (reject
-  $\mid$ detected); oracle thinning rejects whenever it detects, but rarely
-  detects. Cf.\ Table~\ref{tab:datathin}. Source:
-  \texttt{sims/plot\_datathin.R} $\to$ \texttt{datathin.png}.}
-  \label{fig:datathin}
-\end{figure}
-
-\begin{table}[t]
-\centering
-\caption{Data thinning vs.\ the selective tests, matched per replicate
-(\texttt{datathin\_compare.rds}; $K=3$, $q=2$, $n_{\mathrm{per}}=10$,
-$\varepsilon=0.5$). ``detect'' is the probability the true pair is recovered;
-``cpow'' is rejection rate \emph{conditional} on detection. Oracle thinning uses
-the true $\sigma$ (not realizable); MED/sample thinning estimate $\sigma$ to split.
-The median split-variance estimates ($\hat\sigma_{\mathrm{MED}}$, true $\sigma=1$)
-show the inflation that poisons the folds.}
-\label{tab:datathin}
-\begin{tabular}{lcccc}
-\toprule
-$\delta$ & 4 & 5 & 6 & 7 \\
-\midrule
-$\hat\sigma_{\mathrm{MED}}$ (true $=1$)        & 2.08 & 2.42 & 2.77 & 3.12 \\
-\midrule
-\textbf{detect} selective (full data)          & 0.91 & 0.94 & 0.85 & 0.84 \\
-\textbf{detect} thinning, oracle $\sigma$      & 0.60 & 0.88 & 0.93 & 0.95 \\
-\textbf{detect} thinning, MED split            & 0.08 & 0.12 & 0.18 & 0.23 \\
-\textbf{detect} thinning, sample split         & 0.11 & 0.11 & 0.15 & 0.17 \\
-\midrule
-\textbf{cpow} union (known $\sigma$)           & 0.79 & 0.92 & 0.99 & 0.99 \\
-\textbf{cpow} studentized $F$ (no $\sigma$)    & 0.37 & 0.62 & 0.87 & 0.96 \\
-\textbf{cpow} thinning, oracle $\sigma$        & 1.00 & 1.00 & 1.00 & 1.00 \\
-\textbf{cpow} thinning, MED split              & 0.44 & 0.63 & 0.65 & 0.60 \\
-\textbf{cpow} thinning, sample split           & 0.50 & 0.32 & 0.56 & 0.51 \\
-\bottomrule
-\end{tabular}
-\end{table}
+% Data-thinning figures (fig:datathin, fig:datathinsigma) are in the
+% Supplementary figures section -- this is a competitor comparison, not a core result.
 
 % ===========================================================================
 \section{Real data}
@@ -714,12 +648,10 @@ residual under a true mean difference. The union's power gain is a known-$\sigma
 phenomenon and is ``studentized away'' under the $F$ pivot, because $k$-means
 minimizes the within-scatter and pins the statistic against its floor. The method
 is specific to $k$-means / Lloyd's algorithm, whereas \citet{yun2023unknownvar}
-and \citet{gao2024hierarchical} cover broader clustering families.
-% TODO: future work -- (i) a valid more-powerful union that actually gains under
-% unknown variance (would require leverage that survives studentization);
-% (ii) multiple-pairs / FWER control across cluster pairs, building on
-% Yun & He (2024); (iii) randomized / data-fission variants for extra power
-% (Rasines & Young 2023; Dharamshi et al. 2024).
+and \citet{gao2024hierarchical} cover broader clustering families. Natural next
+steps are control of the family-wise error across all cluster pairs, building on
+\citet{yun2024multiplepairs}, and randomized or data-fission variants that trade
+a little of the conditioning for extra power.
 
 % ===========================================================================
 \section*{Figures}
@@ -730,18 +662,30 @@ and \citet{gao2024hierarchical} cover broader clustering families.
 \begin{figure}[p]\centering
   \includegraphics[width=0.85\textwidth]{decomposition.png}
   \caption{The contrast plane $(\Fnorm{\Pp_0\X},\Fnorm{\Pp_1\X})$. The
-  known-$\sigma$ $\phi$-ray (fix within-scatter, vary separation $\to\chi$) versus
-  the studentized $R$-fiber arc (fix total energy $T$, vary the angle $\to F$).
+  known-$\sigma$ tests fix the within-cluster scatter and vary the separation
+  ($\to\chi$); the studentized test fixes the total $T$ and varies the
+  ratio $R$ ($\to F$).
   Source: \texttt{sims/plot\_decomposition.R} $\to$ \texttt{decomposition.png}.}
   \label{fig:decomposition}
 \end{figure}
 
 \begin{figure}[p]\centering
-  \includegraphics[width=0.85\textwidth]{cw_power.png}
-  \caption{Known-$\sigma$ power: union (dashed) vs.\ path (solid) against
-  separation, faceted by $q$. The union is uniformly more powerful
-  (Table~\ref{tab:power}); the gain widens with $K$.
-  Source: \texttt{cw\_power.png}.}
+  \includegraphics[width=\textwidth]{cw_typeI.png}
+  \caption{Selective Type I error ($n=90$, $K=3$). QQ-plots of the null
+  $p$-values against Uniform$(0,1)$, faceted by dimension $q$. \textbf{Top:}
+  known-$\sigma$ tests; \textbf{bottom:} studentized tests. The selective path
+  (solid) and union (dashed) lie on the $45^\circ$ line at every $q$, while the
+  naive $p$-value (orange) collapses below it. Source:
+  \texttt{sims/plot\_cw\_typeI.R} $\to$ \texttt{cw\_typeI.png}.}
+  \label{fig:typeIqq}
+\end{figure}
+
+\begin{figure}[p]\centering
+  \includegraphics[width=\textwidth]{cw_power.png}
+  \caption{Power against separation $\delta$ (known $\sigma$, $n=90$, $K=3$, $95\%$
+  CI), faceted by $q$. The union (dashed) is uniformly more powerful than the path
+  (solid); the gap is largest in the moderate-signal regime. Source:
+  \texttt{sims/plot\_cw\_power.R} $\to$ \texttt{cw\_power.png}.}
   \label{fig:cwpower}
 \end{figure}
 
@@ -752,23 +696,6 @@ and \citet{gao2024hierarchical} cover broader clustering families.
   sample plug-in once clusters separate, because the global SD absorbs the
   separation. Source: \texttt{repro\_yunbarber.png}.}
   \label{fig:yunbarber}
-\end{figure}
-
-\begin{figure}[p]\centering
-  \includegraphics[width=0.49\textwidth]{cw_typeI.png}\hfill
-  \includegraphics[width=0.49\textwidth]{gencov_typeI.png}
-  \caption{Type I control. Left: QQ plot, selective tests on the diagonal, naive
-  invalid (\texttt{cw\_typeI.png}). Right: under AR$(0.5)$/AR$(0.9)$ covariance,
-  the general-covariance union/path stay calibrated (\texttt{gencov\_typeI.png}).}
-  \label{fig:gencov}
-\end{figure}
-
-\begin{figure}[p]\centering
-  \includegraphics[width=0.85\textwidth]{heavytail_typeI.png}
-  \caption{Type I under heavy-tailed $t_5$/$t_{10}$ noise. The studentized test is
-  fairly robust; mild anti-conservatism only for the heaviest tails.
-  Source: \texttt{heavytail\_typeI.png}.}
-  \label{fig:heavytail}
 \end{figure}
 
 \begin{figure}[p]\centering
@@ -783,6 +710,71 @@ and \citet{gao2024hierarchical} cover broader clustering families.
   \caption{Pollen scRNA-seq, $K=3$ (Table~\ref{tab:scrna}): the union rejects all
   three pairs, the path rejects none. Source: \texttt{scrna\_k3.png}.}
   \label{fig:scrna}
+\end{figure}
+
+% ===========================================================================
+\section*{Supplementary figures}
+% Detection/conditional-power decomposition, robustness checks (general
+% covariance, heavy tails), and the data-thinning competitor comparison --
+% secondary to the main results.
+% ===========================================================================
+
+\begin{figure}[p]\centering
+  \includegraphics[width=\textwidth]{cw_detection.png}
+  \caption{(Supplementary) Decomposition of power into \textbf{detection
+  probability} (left; the chance $k$-means recovers the two true clusters, a
+  property of the clustering) and \textbf{conditional power} (right; rejection
+  given detection, a property of the test), against separation $\delta$, faceted by
+  $q$. The union (dashed) beats the path (solid) \emph{conditionally}, so the gain
+  in Figure~\ref{fig:cwpower} is attributable to the test, not the clustering.
+  Source: \texttt{sims/plot\_cw\_power.R} $\to$ \texttt{cw\_detection.png}.}
+  \label{fig:detection}
+\end{figure}
+
+\begin{figure}[p]\centering
+  \includegraphics[width=0.7\textwidth]{gencov_typeI.png}
+  \caption{(Supplementary) Type I under general covariance. Under AR$(0.5)$/AR$(0.9)$
+  covariance the general-covariance union/path stay on the $45^\circ$ line while the
+  naive test is invalid (the isotropic Type I is Figure~\ref{fig:typeIqq}).
+  Source: \texttt{gencov\_typeI.png}.}
+  \label{fig:gencov}
+\end{figure}
+
+\begin{figure}[p]\centering
+  \includegraphics[width=0.85\textwidth]{heavytail_typeI.png}
+  \caption{(Supplementary) Type I under heavy-tailed $t_5$/$t_{10}$ noise. The
+  studentized test is fairly robust; mild anti-conservatism only for the heaviest
+  tails. Source: \texttt{heavytail\_typeI.png}.}
+  \label{fig:heavytail}
+\end{figure}
+
+\begin{figure}[p]\centering
+  \includegraphics[width=\textwidth]{datathin.png}
+  \caption{(Supplementary) Data thinning vs.\ the selective tests, all three metrics
+  in the paper's shared grammar (colour $=$ variance handling; line style $=$
+  paradigm, selective solid vs.\ data thinning dashed). \textbf{A:} Type I as a QQ
+  plot --- every valid method tracks the $45^\circ$ line, the naive test (orange)
+  plunges below. \textbf{B:} detection probability vs.\ $\delta$ --- full-data
+  selective clustering (solid black) dominates the thinned splits, and the plug-in
+  splits ($\hat\sigma_{\mathrm{MED}}$ green, $\hat\sigma_{\mathrm{sample}}$ vermilion)
+  collapse because the variance estimate is inflated by the very separation being
+  tested. \textbf{C:} conditional power vs.\ $\delta$ (reject $\mid$ detected);
+  oracle thinning rejects whenever it detects, but rarely detects.
+  Source: \texttt{sims/plot\_datathin.R} $\to$ \texttt{datathin.png}.}
+  \label{fig:datathin}
+\end{figure}
+
+\begin{figure}[p]\centering
+  \includegraphics[width=0.72\textwidth]{datathin_sigma_box.png}
+  \caption{(Supplementary) Why data thinning's split is poisoned
+  (\texttt{datathin\_compare.rds}, $K=3$, $q=2$, $n_{\mathrm{per}}=10$). Boxplots of
+  the split-variance estimate $\hat\sigma$ against separation $\delta$: at the null
+  ($\delta=0$) both estimators sit at the true $\sigma=1$ (grey dashed), but as the
+  clusters separate they inflate toward $\approx 3$ --- the separation being tested
+  leaks into the global variance estimate, so both folds are split with too much
+  noise. Our studentized test needs no such estimate.
+  Source: \texttt{sims/plot\_datathin\_sigma\_box.R}.}
+  \label{fig:datathinsigma}
 \end{figure}
 
 % ===========================================================================

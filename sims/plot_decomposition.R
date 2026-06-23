@@ -97,10 +97,10 @@ pmap <- ggplot() +
 
 g <- arrangeGrob(
   pmap,
-  strip(phi_F, "KNOWN sigma\nphi-ray: SLIDE", BLK), capstrip(sprintf("phi=%.1f %s", phi_v, ifelse(phi_keep,"✓","✗")), phi_keep), pint_phi,
-  strip(th_F,  "UNKNOWN sigma\nR-fiber: ROTATE", BLU), capstrip(sprintf("R=%.0f %s", R_v, ifelse(th_keep,"✓","✗")), th_keep), pint_R,
+  strip(phi_F, "KNOWN sigma\nSLIDE: vary separation", BLK), capstrip(sprintf("phi=%.1f %s", phi_v, ifelse(phi_keep,"✓","✗")), phi_keep), pint_phi,
+  strip(th_F,  "UNKNOWN sigma\nROTATE: vary ratio", BLU), capstrip(sprintf("R=%.0f %s", R_v, ifelse(th_keep,"✓","✗")), th_keep), pint_R,
   ncol = 1, heights = c(2.3, 1, 0.12, 0.6, 1, 0.12, 0.6),
-  top = textGrob("Perturb the data, keep the clustering:  SLIDE (within fixed) vs ROTATE (total energy T fixed)",
+  top = textGrob("Perturb the data, keep the clustering:  SLIDE (within fixed) vs ROTATE (total T fixed)",
                  gp = gpar(fontface = "bold", fontsize = 12)))
 ggsave_km(g, "sims/results/decomposition", width = 12, height = 11.5)
 cat(sprintf("Wrote decomposition. T=%.0f (invariant)  phi-trunc & R-trunc panels added; trade defined on the map.\n", Tt))

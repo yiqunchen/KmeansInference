@@ -1,17 +1,22 @@
 Package: KmeansInference
 Type: Package
-Title: Selective inference for k-means clustering
+Title: Selective Inference for K-Means Clustering
 Version: 0.1.0
 Author: Yiqun Chen
 Maintainer: Yiqun Chen <yiqunc@uw.edu>
 Authors@R: c(person("Yiqun", "Chen", email = "yiqunc@uw.edu",
                   role = c("aut", "cre")))
-Description: An implementation for a difference-in-means test between clusters of observations identified via k-means clustering, as described in Chen and Witten (2022+)
-Imports: rdist, stats, intervals
-Suggests: testthat (>= 3.0.0)
+Description: An implementation for a difference-in-means test between clusters of observations identified via k-means clustering, as described in Chen and Witten (2022+).
+Imports: intervals, stats
+Suggests:
+    ggplot2,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 3.5)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+VignetteBuilder: knitr

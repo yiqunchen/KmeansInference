@@ -2,7 +2,7 @@
 
 ### What is KmeansInference?
 
-`KmeansInference` is an `R` package for testing for a difference in means between clusters of observations identified via k-means clustering.
+`KmeansInference` is an `R` package for testing for a difference in means between clusters of observations identified via k-means clustering. It includes the original Lloyd-path selective test and a more-powerful union selective test.
 
 ### How do I install the package?
 
@@ -58,4 +58,3 @@ Gao, L. L., Bien, J., and Witten, D. (2022+). Selective inference for hierarchic
 Lähnemann, D., Köster, J., Szczurek, E., et al. (2020). Eleven grand challenges in single-cell data science. Genome Biology, 21(1):31.
 
 Stuart, T., Butler, A., Hoffman, P., et al. (2019). Comprehensive integration of Single-Cell data. Cell, 177(7):1888–1902.e21.
-

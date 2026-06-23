@@ -129,3 +129,43 @@ test_that("anchor path intervals contain their anchors", {
     ))
   }
 })
+
+test_that("tested cluster labels must be distinct", {
+  set.seed(2022)
+  true_clusters <- rep(1:3, each=8)
+  mu <- rbind(c(2,0), c(0,2), c(-2,0))
+  X <- matrix(rnorm(24*2), 24, 2) + mu[true_clusters, ]
+
+  expect_error(
+    kmeans_inference(X, k=3, cluster_1=1, cluster_2=1,
+                     sig=1, iter.max=8, seed=2021),
+    "must be different"
+  )
+  expect_error(
+    kmeans_inference_union(X, k=3, cluster_1=1, cluster_2=1,
+                           sig=1, iter.max=8, seed=2021),
+    "must be different"
+  )
+})
+
+test_that("general-covariance path summary reports a scalar naive p-value", {
+  set.seed(2022)
+  n <- 30
+  true_clusters <- rep(1:3, each=10)
+  delta <- 4
+  q <- 2
+  mu <- rbind(c(delta/2,0), c(0,sqrt(3)*delta/2), c(-delta/2,0))
+  X <- matrix(rnorm(n*q), n, q) + mu[true_clusters, ]
+  SigInv <- solve(matrix(c(1.5, 0.4, 0.4, 0.8), 2, 2))
+
+  fit <- suppressWarnings(kmeans_inference(
+    X, k=3, cluster_1=1, cluster_2=3,
+    iso=FALSE, SigInv=SigInv, iter.max=8, seed=2021
+  ))
+  sm <- summary(fit)
+
+  expect_true("p_naive" %in% names(sm))
+  expect_equal(length(sm$p_naive), 1)
+  expect_true(is.finite(sm$p_naive))
+  expect_true(sm$p_naive >= 0 && sm$p_naive <= 1)
+})

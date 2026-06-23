@@ -61,6 +61,10 @@ kmeans_inference_union <- function(X, k, cluster_1, cluster_2,
     cat("Variance not specified, using a robust median-based estimator by default!\n")
     sig <- .kmeans_estimate_MED(X)
   }
+  if(!is.null(sig) && (!is.numeric(sig) || length(sig) != 1 ||
+                       !is.finite(sig) || sig <= 0)){
+    stop("sig must be a single positive number.")
+  }
   if(is.null(sig)&is.null(SigInv)){
     stop("At least one of variance and covariance matrix must be specified!")
   }
@@ -77,6 +81,9 @@ kmeans_inference_union <- function(X, k, cluster_1, cluster_2,
   }
   if((min(cluster_1,cluster_2)<1)|(max(cluster_1,cluster_2)>k)){
     stop("Cluster numbers must be between 1 and k!")
+  }
+  if(cluster_1 == cluster_2){
+    stop("cluster_1 and cluster_2 must be different.")
   }
 
   n <- dim(X)[1]
@@ -127,7 +134,7 @@ kmeans_inference_union <- function(X, k, cluster_1, cluster_2,
     test_stat_used    <- Sig_XTv_norm
     scale_factor_used <- squared_norm_nu
     stat_scale        <- Sig_XTv_norm/XTv_norm
-    p_naive <- pchisq(test_stat_used^2/scale_factor_used, df=p, lower.tail=FALSE)
+    p_naive <- stats::pchisq(test_stat_used^2/scale_factor_used, df=p, lower.tail=FALSE)
   }
 
   # Bound how far along the perturbation path we scan for distinct Lloyd paths.
@@ -144,9 +151,9 @@ kmeans_inference_union <- function(X, k, cluster_1, cluster_2,
       stop("scan_tail_prob must be in (0, 1).")
     }
     stat_chisq   <- test_stat_used^2/scale_factor_used
-    surv_stat    <- pchisq(stat_chisq, df=p, lower.tail=FALSE)
+    surv_stat    <- stats::pchisq(stat_chisq, df=p, lower.tail=FALSE)
     surv_target  <- max(scan_tail_prob*surv_stat, .Machine$double.xmin)
-    phi_max_stat <- sqrt(scale_factor_used*qchisq(surv_target, df=p, lower.tail=FALSE))
+    phi_max_stat <- sqrt(scale_factor_used*stats::qchisq(surv_target, df=p, lower.tail=FALSE))
     if(!is.finite(phi_max_stat)){
       phi_max_stat <- test_stat_used + 10*sqrt(scale_factor_used)  # backstop
     }
@@ -204,9 +211,9 @@ kmeans_inference_union <- function(X, k, cluster_1, cluster_2,
 
 .kmeans_estimate_MED <- function(X){
   for (j in c(1:ncol(X))){
-    X[,j] <- X[,j]-median(X[,j])
+    X[,j] <- X[,j]-stats::median(X[,j])
   }
-  sqrt(median(X^2)/qchisq(1/2,df=1))
+  sqrt(stats::median(X^2)/stats::qchisq(1/2,df=1))
 }
 
 .kmeans_fast_dist_compute <- function(x,y) {

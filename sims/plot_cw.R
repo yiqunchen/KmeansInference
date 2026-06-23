@@ -1,12 +1,12 @@
 #!/usr/bin/env Rscript
-# Chen-&-Witten-faithful (n=150) panels for the CW sweep -- house style.
+# Chen-&-Witten-faithful (n=90) panels for the CW sweep -- house style.
 # Robust to PARTIAL data (sweep may still be running): cells/curves with too
 # few valid reps are dropped, and the title is marked accordingly.
 source("sims/house_style.R")
-DIR <- if (length(commandArgs(TRUE))) commandArgs(TRUE)[1] else "sims/results/sweep_cw"
+DIR <- if (length(commandArgs(TRUE))) commandArgs(TRUE)[1] else "sims/results/sweep_cw_uv"
 s   <- read.csv(file.path(DIR, "summary.csv"), stringsAsFactors = FALSE)
 done <- length(list.files(file.path(DIR, "cells")))
-tag  <- sprintf(" (partial: %d/140 chunks)", done)
+tag  <- sprintf(" (%d chunks)", done)
 
 read_raw <- function(label) {
   fs <- list.files(file.path(DIR, "cells"),
@@ -86,7 +86,7 @@ pB <- pB + theme(legend.position = "none")
 pC <- pC + theme(legend.position = "none")
 body <- arrangeGrob(pA, pB, pC, ncol = 3, widths = c(1.35, 1, 1))
 fig <- arrangeGrob(body, legC, ncol = 1, heights = c(10, 1.1))
-fig <- arrangeGrob(fig, top = textGrob(paste0("Chen-&-Witten-faithful, n=150", tag),
+fig <- arrangeGrob(fig, top = textGrob(paste0("Chen-&-Witten-faithful, n=90", tag),
                                        gp = gpar(fontface = "bold", cex = 1.0)))
 ggsave_km(fig, "sims/results/cw_panels", width = 15.5, height = 4.8)
 cat("Wrote sims/results/cw_panels.{pdf,png}\n")

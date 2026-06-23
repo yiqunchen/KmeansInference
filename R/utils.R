@@ -60,7 +60,17 @@ preserve_cl <- function(cl, cl_phi, k1, k2) {
   return(k1_in & k2_in)
 }
 
-#' @keywords internal
+#' Naive multivariate Wald test for two k-means clusters
+#'
+#' This test treats the cluster labels as fixed and therefore does not account
+#' for selection. It is exported for comparison with the selective tests.
+#'
+#' @param X Numeric matrix; observations by features.
+#' @param cluster_vec Integer vector of cluster labels.
+#' @param k1,k2 Cluster labels to compare.
+#' @param sig Noise standard deviation.
+#'
+#' @return A list with the observed statistic and naive p-value.
 #' @export
 multivariate_Z_test <- function(X, cluster_vec, k1, k2, sig) {
   q <- ncol(X)
@@ -71,7 +81,7 @@ multivariate_Z_test <- function(X, cluster_vec, k1, k2, sig) {
   n2 <- sum(cluster_vec == k2)
   squared_norm_nu <- 1/n1 + 1/n2
   scale_factor <- squared_norm_nu*sig^2
-  accurate_pchi <- pchisq(stat^2/scale_factor, df=q, log.p = TRUE,lower.tail=FALSE)
+  accurate_pchi <- stats::pchisq(stat^2/scale_factor, df=q, log.p = TRUE,lower.tail=FALSE)
   pval <- exp(accurate_pchi) #1 - pchisq(stat^2/scale_factor, df=q)
   return(list(stat=stat, pval=pval))
 }

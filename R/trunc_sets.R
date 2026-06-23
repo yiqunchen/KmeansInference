@@ -270,6 +270,8 @@ norm_sq_phi <- function(X, v, XTv, XTv_norm, dir_XTv, v_norm, i, j){
 #' @param k, cluster of interest
 #' @param v, contrast vector n by 1
 #' @param i, index of observation
+#' @param weighted_v_i cluster-wise averages of the contrast vector from the
+#' previous Lloyd step
 #'
 #' @return parameters: a, b, c the coefficients of the quadratic equation such that (ax^2 + bx + c <= 0)
 #'
@@ -284,7 +286,7 @@ norm_phi_canonical_kmeans <- function(X, last_centroids, XTv, XTv_norm, dir_XTv,
   # n_k and class k
   # .colMeans(X[indicator_location,], n_k, dim(X)[2])
   quad_coef <- (v_i_expression)^2
-  # compute lienar coef
+  # compute linear coef
   linear_coef_part_1 <- v_i_expression*(x_i_expression%*%dir_XTv)
   linear_coef_part_2 <- (v_i_expression)^2*XTv_norm
   linear_coef <- 2*(linear_coef_part_1-linear_coef_part_2)
@@ -484,6 +486,4 @@ kmeans_compute_S_genCov <- function(X, estimated_k_means, all_T_clusters,
   return(final_interval_chisq)
 
 }
-
-
 

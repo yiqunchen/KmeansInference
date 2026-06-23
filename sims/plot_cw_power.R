@@ -7,7 +7,7 @@
 # rej_union_rfib/rej_path_rfib). Robust to partial data (drops cells < 40 reps).
 source("sims/house_style.R")
 suppressMessages({ library(gridExtra); library(grid) })
-DIR <- if (length(commandArgs(TRUE))) commandArgs(TRUE)[1] else "sims/results/sweep_cw"
+DIR <- if (length(commandArgs(TRUE))) commandArgs(TRUE)[1] else "sims/results/sweep_cw_uv"
 s   <- read.csv(file.path(DIR, "summary.csv"), stringsAsFactors = FALSE)
 pw  <- s[grepl("cw_power", s$label) & s$n_valid >= 40, ]
 if (nrow(pw) == 0) stop("no power cells with >=40 valid reps yet")

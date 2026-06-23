@@ -14,7 +14,8 @@ norm_phi_canonical_kmeans(
   cl,
   k,
   v,
-  i
+  i,
+  weighted_v_i
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ norm_phi_canonical_kmeans(
 \item{v, }{contrast vector n by 1}
 
 \item{i, }{index of observation}
+
+\item{weighted_v_i}{cluster-wise averages of the contrast vector from the
+previous Lloyd step}
 }
 \value{
 parameters: a, b, c the coefficients of the quadratic equation such that (ax^2 + bx + c <= 0)

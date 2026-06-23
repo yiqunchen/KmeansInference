@@ -18,7 +18,7 @@ In this tutorial, we illustrate how to apply the functions in the `KmeansInferen
 
 In this tutorial, we will make use of the data of the following five cell types: [monocytes](https://cf.10xgenomics.com/samples/cell-exp/1.1.0/cd14_monocytes/cd14_monocytes_filtered_gene_bc_matrices.tar.gz), [memory T cells](https://cf.10xgenomics.com/samples/cell-exp/1.1.0/memory_t/memory_t_filtered_gene_bc_matrices.tar.gz), [naive T cells](https://cf.10xgenomics.com/samples/cell-exp/1.1.0/naive_t/naive_t_filtered_gene_bc_matrices.tar.gz), [B cells](https://cf.10xgenomics.com/samples/cell-exp/1.1.0/b_cells/b_cells_filtered_gene_bc_matrices.tar.gz), and [natural killer cells](https://cf.10xgenomics.com/samples/cell-exp/1.1.0/cd56_nk/cd56_nk_filtered_gene_bc_matrices.tar.gz).
 
-After downloading the data, you will need to need to rename the five downloaded folders as `filtered_matrices_mex_mono`,  `filtered_matrices_mex_memory`, `filtered_matrices_mex_naive_cytotoxic`,`filtered_matrices_mex_bcell`, and `filtered_matrices_mex_nk`. The following analysis also assumes that all five folders are listed under the directory `raw`.
+After downloading the data, you will need to rename the five downloaded folders as `filtered_matrices_mex_mono`,  `filtered_matrices_mex_memory`, `filtered_matrices_mex_naive_cytotoxic`,`filtered_matrices_mex_bcell`, and `filtered_matrices_mex_nk`. The following analysis also assumes that all five folders are listed under the directory `raw`.
 
 ```{r,echo=FALSE}
 input_dir <- "~/Desktop/dissertation/k_means_project/lucy_real_data/"
@@ -85,7 +85,7 @@ mix5 <- cbind(cd4.t, cd19.b, mono, nk, naive.cytotoxic)
 colData(mix5)$CellType <- c(rep("Memory T cell", ncol(cd4.t)),
                             rep("B cell", ncol(cd19.b)),
                             rep("Monocyte", ncol(mono)),
-                            rep("Nature Killer", ncol(nk)),
+                            rep("Natural Killer", ncol(nk)),
                             rep("Naive Cytotoxic", ncol(naive.cytotoxic)) )
 ```
 
@@ -175,7 +175,7 @@ After whitening the data (using the aforementioned transformation), we applied k
 tcell.id <- which(processed.mix5$labels == "Memory T cell")
 bcell.id <- which(processed.mix5$labels == "B cell")
 mono.id <- which(processed.mix5$labels == "Monocyte")
-nk.id <- which(processed.mix5$labels == "Nature Killer")
+nk.id <- which(processed.mix5$labels == "Natural Killer")
 naive.id <- which(processed.mix5$labels == "Naive Cytotoxic")
 
 ss.id <- c(sample(tcell.id, 400), sample(bcell.id, 400),
@@ -263,6 +263,5 @@ Lähnemann, D., Köster, J., Szczurek, E., et al. (2020). Eleven grand challenge
 Stuart, T., Butler, A., Hoffman, P., et al. (2019). Comprehensive integration of Single-Cell data. Cell, 177(7):1888–1902.e21.
 
 Zheng, G. X. Y., Terry, J. M., Belgrader, P., Ryvkin, P., Bent, Z. W., Wilson, R., Ziraldo, S. B., Wheeler, T. D., McDermott, G. P., Zhu, J., Gregory, M. T., Shuga, J., Montesclaros, L., Underwood, J. G., Masquelier, D. A., Nishimura, S. Y., Schnall-Levin, M., Wyatt, P. W., Hindson, C. M., Bharadwaj, R., Wong, A., Ness, K. D., Beppu, L. W., Deeg, H. J., McFarland, C., Loeb, K. R., Valente, W. J., Ericson, N. G., Stevens, E. A., Radich, J. P., Mikkelsen, T. S., Hindson, B. J., and Bielas, J. H. (2017), “Massively parallel digital transcriptional profiling of single cells,” Nature Communications, 8, 14049. https://doi.org/10.1038/ncomms14049.
-
 
 

@@ -10,122 +10,152 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.align = "center",
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
-In this tutorial, we demonstrate basic use of the `KmeansInference` package. 
+This tutorial demonstrates the basic workflow for `KmeansInference`, including
+the more-powerful union selective test implemented in
+`kmeans_inference_union()`.
 
-First we load relevant packages:
 ```{r}
 library(KmeansInference)
 library(ggplot2)
 ```
 
-We first generate data according to $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
-\begin{align}
-\label{eq:power_model}
-\boldsymbol{\mu}_1 =\ldots = \boldsymbol{\mu}_{50} = \begin{bmatrix}
--\delta/2 \\ 0_{q-1}
-\end{bmatrix}, \; {\boldsymbol\mu}_{51}=\ldots = \boldsymbol{\mu}_{100} = \begin{bmatrix}
- 0_{q-1} \\ \sqrt{3}\delta/2
-\end{bmatrix} ,\;
-\boldsymbol{\mu}_{101}=\ldots = \boldsymbol{\mu}_{150} = \begin{bmatrix}
-\delta/2 \\ 0_{q-1}
-\end{bmatrix}.
-\end{align}
-Here, we can think of $\mathcal{C}_1 = \{1,\ldots,50\},\mathcal{C}_2 = \{51,\ldots,100\},\mathcal{C}_3 = \{101,\ldots,150\}$ as the ``true clusters''.
-In the figure below, we display one such simulation $\mathbf{x}\in\mathbb{R}^{100\times 2}$ with $\delta=10$. 
+## Simulate clustered data
 
-```{r fig.align="center",  fig.height = 5, fig.width = 5}
+We generate \(n=60\) observations in \(q=2\) dimensions from three Gaussian
+clusters with common noise standard deviation \(\sigma=1\). The three means form
+an equilateral triangle, so clusters 1 and 3 have different population means.
+
+```{r}
 set.seed(2022)
-n <- 150
-true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
-delta <- 10
+n_per <- 20
+n <- 3 * n_per
 q <- 2
-mu <- rbind(c(delta/2,rep(0,q-1)), c(rep(0,q-1), sqrt(3)*delta/2), c(-delta/2,rep(0,q-1)) )
+delta <- 5
 sig <- 1
-X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
 
-ggplot(data.frame(X), aes(x=X1, y=X2)) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
+true_clusters <- rep(1:3, each = n_per)
+mu <- rbind(
+  c(delta / 2, 0),
+  c(0, sqrt(3) * delta / 2),
+  c(-delta / 2, 0)
+)
+X <- matrix(rnorm(n * q, sd = sig), n, q) + mu[true_clusters, ]
+
+plot_df <- data.frame(
+  X1 = X[, 1],
+  X2 = X[, 2],
+  true_cluster = factor(true_clusters)
+)
+ggplot(plot_df, aes(X1, X2, colour = true_cluster)) +
+  geom_point(size = 2) +
+  coord_equal() +
+  labs(x = "Feature 1", y = "Feature 2", colour = "True cluster") +
+  theme_classic(base_size = 14)
 ```
 
-### k-means clustering (K=3)
-In the code below, we call the `kmeans_estimation` function to estimate clusters using Lloyd's algorithm with $K=3$. In the figure below, observations are colored by the clusters obtained via $k$-means clustering with $K=3$. In this case, $k$-means recovers the true clusters perfectly. 
+## Run k-means
 
-```{r fig.align="center",  fig.height = 4, fig.width = 5}
+The package uses `kmeans_estimation()` rather than `stats::kmeans()` because the
+selective test needs the full Lloyd path, not only the final clustering. The
+final cluster labels are the labels used by the inference functions.
+
+```{r}
 k <- 3
-estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2021)$final_cluster
-table(true_clusters,estimated_clusters)
-ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
+kmeans_fit <- kmeans_estimation(X, k, iter.max = 20, seed = 2021, verbose = FALSE)
+estimated_clusters <- kmeans_fit$final_cluster
+table(true_clusters, estimated_clusters)
+
+plot_df$estimated_cluster <- factor(estimated_clusters)
+ggplot(plot_df, aes(X1, X2, colour = estimated_cluster)) +
+  geom_point(size = 2) +
+  coord_equal() +
+  labs(x = "Feature 1", y = "Feature 2", colour = "Estimated cluster") +
+  theme_classic(base_size = 14)
 ```
 
-The `kmeans_estimation` function implements the Lloyd's algorithm for k-means clustering and  stores *all the intermediate clustering assignments*. The estimated clusters via `kmeans_estimation`, *as well as their orders*, agree with the those returned by the `kmeans` function in base `R` (with `algorithm = "Lloyd"`).
+## Original path-conditioned inference
 
-N.B.: the `kmeans` function in base `R` is implemented in Fortran and C, while our implementation is entirely in `R`. As a result, these two functions might disagree on few corner cases. 
-```{r fig.align="center",  fig.height = 4, fig.width = 5}
-set.seed(2021)
-base_r_estimated_clusters <- kmeans(x=X, centers=k,iter.max = 20, algorithm = "Lloyd")$cluster
-table(estimated_clusters, base_r_estimated_clusters)
-```
+The original selective test conditions on the entire observed Lloyd path. Here
+we test the difference in means between estimated clusters 1 and 3.
 
-
-### Inference for k-means clustering (K=3)
-
-In this section, we demonstrate how to use our software to obtain $p$-values for testing for a difference in means between clusters of observations identified via $k$-means clustering. As an example, consider testing for a difference in means between the blue cluster (labeled as 1 in `estimated_clusters`) and the pink cluster (labeled as 3 in `estimated_clusters`). 
-
-The code below demonstrates how to use the function `kmeans_inference`, which performs inference on the specified two estimated clusters. After obtaining the inferential result, we call the summary method to get a summary of the results, in the form of a data frame.
-
-
-```{r fig.align="center",  fig.height = 4, fig.width = 5}
+```{r}
 cluster_1 <- 1
 cluster_2 <- 3
-cl_1_2_inference_demo <- kmeans_inference(X, k=3, cluster_1, cluster_2,
-                                          sig=sig, iter.max = 20, seed = 2021)
-summary(cl_1_2_inference_demo)
+
+path_result <- kmeans_inference(
+  X, k = k, cluster_1 = cluster_1, cluster_2 = cluster_2,
+  sig = sig, iter.max = 20, seed = 2021, verbose = FALSE
+)
+summary(path_result)
 ```
 
-In the summary, we have the $\ell_2$ norm of the difference in means, i.e.,$\left\Vert \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{x}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{x}_i/|\hat{\mathcal{C}}_2| \right\Vert_2$  (`test_stats`), the Wald p-value (`p_naive`), and the selective $p$-value (`p_kmeans`). In this case, the test based on $p_{\text{selective}}$ can easily reject this null hypothesis that the blue and pink clusters have the same mean ($p_{\text{selective}}<0.001$).
+The summary reports the norm of the observed difference in cluster means
+(`test_stat`), the original selective p-value (`p_selective`), and the naive
+Wald p-value (`p_naive`) that ignores the fact that the clusters were selected
+from the same data.
 
-### Inference for k-means clustering when the null hypothesis holds
+## More-powerful union inference
 
-In this section, we demonstrate that our proposed $p$-value yields reasonable results when the null hypothesis does hold. Consider the same data as before, and we apply $k$-means clustering with $K=4$ to obtain four estimated clusters. 
+The union test weakens the conditioning event: it preserves the two tested
+observed clusters along the perturbation path, but does not require every
+intermediate Lloyd assignment to match the observed path. The returned `p_path`
+reproduces the original selective p-value, while `p_union` is the more-powerful
+selective p-value.
 
-```{r fig.align="center",  fig.height = 4, fig.width = 5}
-k_new <- 4
-new_estimated_clusters <- kmeans_estimation(X, k_new, iter.max = 20, seed = 2021)$final_cluster
-ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(new_estimated_clusters))) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange","grey")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
-table(true_clusters,new_estimated_clusters)
+```{r}
+union_result <- kmeans_inference_union(
+  X, k = k, cluster_1 = cluster_1, cluster_2 = cluster_2,
+  sig = sig, iter.max = 20, seed = 2021, verbose = FALSE
+)
+summary(union_result)
 ```
 
-By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now $p_{\text{selective}}$ yields a much more moderate $p$-value, and the test based on $p_{\text{selective}}$ cannot reject the null hypothesis when it holds. By contrast, the Wald $p$-value is tiny and leads to an anti-conservative test.
+In this realization, both selective tests reject the null hypothesis, and the
+union p-value is smaller because it conditions on less information. The
+`exhaustive` column indicates whether all adjacent Lloyd regions were explored
+up to the tail cutoff controlled by `scan_tail_prob`.
 
-```{r fig.align="center",  fig.height = 4, fig.width = 5}
-cluster_1 <- 1
-cluster_2 <- 4
-cl_1_4_inference_demo <- kmeans_inference(X, k=4, cluster_1, cluster_2,
-                                          sig=sig, iter.max = 20, seed = 2021)
-summary(cl_1_4_inference_demo)
+## A null split example
+
+Selective inference is most important when k-means splits one population group
+into multiple estimated clusters. We rerun k-means with \(K=4\); in this
+realization, estimated clusters 2 and 4 are both mostly drawn from the same true
+cluster.
+
+```{r}
+k_null <- 4
+kmeans_fit_null <- kmeans_estimation(
+  X, k_null, iter.max = 20, seed = 2021, verbose = FALSE
+)
+estimated_clusters_null <- kmeans_fit_null$final_cluster
+table(true_clusters, estimated_clusters_null)
+
+plot_df$estimated_cluster_k4 <- factor(estimated_clusters_null)
+ggplot(plot_df, aes(X1, X2, colour = estimated_cluster_k4)) +
+  geom_point(size = 2) +
+  coord_equal() +
+  labs(x = "Feature 1", y = "Feature 2", colour = "Estimated cluster") +
+  theme_classic(base_size = 14)
 ```
 
+Testing these two split clusters illustrates the danger of ignoring selection:
+the naive p-value is tiny, whereas the union selective p-value is moderate.
 
+```{r}
+null_result <- kmeans_inference_union(
+  X, k = k_null, cluster_1 = 2, cluster_2 = 4,
+  sig = sig, iter.max = 20, seed = 2021, verbose = FALSE
+)
+summary(null_result)
+```
 
-
-
-
-
+If `sig` is omitted, `KmeansInference` uses the robust median-based estimate
+from Chen and Witten (2022+). For a general covariance model, set `iso = FALSE`
+and pass `SigInv`, the inverse covariance matrix.

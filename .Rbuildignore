@@ -1,2 +1,12 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.gitignore$
+^\.claude$
+^docs$
+^pkgdown$
+^_pkgdown\.yml$
+^index\.md$
+^sticker\.png$
+^sims/results$
+^sims/clusterpval_compare$
+^writeup$

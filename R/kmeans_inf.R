@@ -5,6 +5,8 @@
 #' @param iter.max Positive integer; 	the maximum number of iterations allowed in k-means clustering (Lloyd's) algorithm.
 #' Default to \code{10}.
 #' @param seed Random seed for the initialization in k-means clustering algorithm.
+#' @param tol_eps A small number specifying the convergence criterion.
+#' @param verbose Boolean; currently reserved for compatibility.
 #'
 #' @details
 #' For best rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.
@@ -18,7 +20,7 @@
 #'
 #' This function is a re-implementation of the kmeans function in base R (i.e., the stats package) that
 #' stores all the intermediate clustering assignments as well (see Section 3 of our manuscript for details).
-#' Ouputs from these two functions agree on their estimated clusters, as well as their ordering.
+#' Outputs from these two functions agree on their estimated clusters, as well as their ordering.
 #'
 #' N.B.: the kmeans function in base R was implemented in Fortran and C, while our implementation is entirely in R.
 #' As a result, there might be corner cases where these two functions disagree.
@@ -139,7 +141,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' the \code{kmeans_estimation} function in the \code{KmeansInference} package.
 #' @param X Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data
 #' @param k Integer; the number of clusters for k-means clustering
-#' @param cluster_1,cluster_2 Two different integers in {1,...,k}; two estimated clusters to test, as indexed by the results of
+#' @param cluster_1,cluster_2 Two different integers in \eqn{\{1,\ldots,k\}}; two estimated clusters to test, as indexed by the results of
 #' \code{kmeans_estimation}.
 #' @param iso Boolean. If TRUE, an isotropic covariance matrix model is used.
 #' @param sig Numeric; noise standard deviation for the observed data, a non-negative number;
@@ -149,6 +151,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' @param seed Random seed for the initialization in k-means clustering algorithm.
 #' @param tol_eps A small number specifying the convergence criterion for k-means clustering,
 #' default to \code{1e-6}.
+#' @param verbose Boolean; currently reserved for compatibility.
 #'
 #' @return Returns a list with the following elements:
 #' \itemize{
@@ -169,7 +172,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' solves the following optimization problem
 #' \deqn{ \sum_{k=1}^K \sum_{i \in C_k} \big\Vert x_i - \sum_{i \in C_k} x_i/|C_k| \big\Vert_2^2 , }
 #'  where \eqn{C_1,..., C_K} forms a partition of the integers \eqn{1,..., n}, and can be regarded as
-#'  the estimated clusters of the original observations. Lloyd's algorithm is an iterative apparoach to solve
+#'  the estimated clusters of the original observations. Lloyd's algorithm is an iterative approach to solve
 #'  this optimization problem.
 #' Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
 #' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
@@ -241,11 +244,15 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
     cat("Variance not specified, using a robust median-based estimator by default!\n")
     estimate_MED <- function(X){
       for (j in c(1:ncol(X))){
-        X[,j] <- X[,j]-median(X[,j])}
-      sigma_hat <- sqrt(median(X^2)/qchisq(1/2,df=1))
+        X[,j] <- X[,j]-stats::median(X[,j])}
+      sigma_hat <- sqrt(stats::median(X^2)/stats::qchisq(1/2,df=1))
       return(sigma_hat)
     }
     sig <- estimate_MED(X)
+  }
+  if(!is.null(sig) && (!is.numeric(sig) || length(sig) != 1 ||
+                       !is.finite(sig) || sig <= 0)){
+    stop("sig must be a single positive number.")
   }
   if(is.null(sig)&is.null(SigInv)){
     stop("At least one of variance and covariance matrix must be specified!")
@@ -256,8 +263,16 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
   if (!(iso)&(is.null(SigInv))){
     stop("You must specify SigInv when iso=FALSE!\n")
   }
+  if(!is.null(SigInv)){
+    if(!is.matrix(SigInv) || nrow(SigInv)!=ncol(X) || ncol(SigInv)!=ncol(X)){
+      stop("SigInv must be a q by q matrix matching ncol(X).")
+    }
+  }
   if((min(cluster_1,cluster_2)<1)|(max(cluster_1,cluster_2)>k)){
     stop("Cluster numbers must be between 1 and k!")
+  }
+  if(cluster_1 == cluster_2){
+    stop("cluster_1 and cluster_2 must be different.")
   }
   n <- dim(X)[1]
   p <- dim(X)[2]
@@ -286,9 +301,12 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
   # compute
   XTv <- diff_means
   XTv_norm <- norm_vec(diff_means)
+  if(XTv_norm <= 0){
+    stop("The observed difference in means has zero norm; the perturbation direction is undefined.")
+  }
   dir_XTv <- XTv/XTv_norm
 
-  p_naive <- NULL
+  p_naive <- NA_real_
   # compute test_stat in the isotropic case
   if(!is.null(sig)){
     test_stats <- XTv_norm
@@ -302,7 +320,7 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
                                            dir_XTv, v_vec,
                                            v_norm, T_length, k)
 
-    p_naive <- multivariate_Z_test(X, estimated_final_cluster, cluster_1, cluster_2, sig)
+    p_naive <- multivariate_Z_test(X, estimated_final_cluster, cluster_1, cluster_2, sig)$pval
   }
 
   # compute test_stats in the general cov case
@@ -316,6 +334,7 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
                                            n, XTv, XTv_norm,
                                            dir_XTv, v_vec,
                                            v_norm, T_length, test_stats, k)
+    p_naive <- stats::pchisq(test_stats^2/scale_factor, df=p, lower.tail=FALSE)
 
   }
 
@@ -342,15 +361,13 @@ kmeans_inference <- structure(function(X, k, cluster_1, cluster_2,
                       "cluster_2" = cluster_2,
                       "sig" = sig, "SigInv" = SigInv,
                       "scale_factor" = scale_factor,
-                      "p_naive" = p_naive$pval,
+                      "p_naive" = p_naive,
                        "call" = match.call(),
                       "pval" = pval)
   class(result_list) <- "kmeans_inference"
   return(result_list)
 
 })
-
-
 
 
 

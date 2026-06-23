@@ -22,6 +22,10 @@ kmeans_estimation(
 Default to \code{10}.}
 
 \item{seed}{Random seed for the initialization in k-means clustering algorithm.}
+
+\item{tol_eps}{A small number specifying the convergence criterion.}
+
+\item{verbose}{Boolean; currently reserved for compatibility.}
 }
 \value{
 Returns a list with the following elements:
@@ -46,7 +50,7 @@ The algorithm from Lloyd (1957) (also proposed in MacQueen (1967)) is used to pr
 
 This function is a re-implementation of the kmeans function in base R (i.e., the stats package) that
 stores all the intermediate clustering assignments as well (see Section 3 of our manuscript for details).
-Ouputs from these two functions agree on their estimated clusters, as well as their ordering.
+Outputs from these two functions agree on their estimated clusters, as well as their ordering.
 
 N.B.: the kmeans function in base R was implemented in Fortran and C, while our implementation is entirely in R.
 As a result, there might be corner cases where these two functions disagree.

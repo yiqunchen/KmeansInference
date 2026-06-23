@@ -2,7 +2,7 @@
 
 ### What is KmeansInference?
 
-`KmeansInference` is an `R` package for testing for a difference in means between clusters of observations identified via k-means clustering.
+`KmeansInference` is an `R` package for testing for a difference in means between clusters of observations identified via k-means clustering. It includes the original Lloyd-path selective test and a more-powerful union selective test.
 
 ### How do I install the package?
 
@@ -15,7 +15,7 @@ library(KmeansInference)
 
 ### Tutorials and Use
 
-Visit https://yiqunchen.github.io/KmeansInference/ for tutorials and examples. Please file an [issue](https://github.com/yiqunchen/KmeansInference/issues) if you have a request for a tutorial that is not currently included.
+Visit https://yiqunchen.github.io/KmeansInference/ for tutorials and examples. The software tutorial demonstrates both `kmeans_inference()` and the more-powerful `kmeans_inference_union()` workflow. Please file an [issue](https://github.com/yiqunchen/KmeansInference/issues) if you have a request for a tutorial that is not currently included.
 
 
 ### Citation
@@ -27,4 +27,3 @@ Chen YT,  Witten DM. (2022+) Selective inference for k-means clustering. arXiv p
 ### Bug Reports / Change Requests
 
 If you encounter a bug or would like to make a change request, please file it as an issue [here](https://github.com/yiqunchen/KmeansInference/issues).
-
