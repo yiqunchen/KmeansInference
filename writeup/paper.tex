@@ -454,6 +454,22 @@ solver computes the conditioning set exactly for any $K$, so it
 $k$-means (even for the path test), and (ii) yields the more powerful union for
 free. The method is $k$-means-specific (theirs applies to general clustering,
 e.g. hierarchical) and requires the pointwise null $H_0'$.
+Figure~\ref{fig:exactis} makes the first point concrete: running
+\citet{yun2023unknownvar}'s own importance sampler on the same $k$-means
+clustering, its estimate of the union $p$-value converges to our exact value but
+carries Monte Carlo error at every budget --- even at their recommended $8000$
+draws --- whereas our value is exact.
+
+\begin{figure}[t]\centering
+  \includegraphics[width=0.72\textwidth]{exact_vs_is.png}
+  \caption{Exact union $p$-value vs.\ importance sampling, on one $K=3$ dataset.
+  The black line is our exact $p=0.0140$. Boxplots are $20$ runs of
+  \citet{yun2023unknownvar}'s importance sampler (their proposal, rotation, and
+  weights, applied to the $k$-means clustering) at each draw budget: the estimate
+  is unbiased for our value but never loses its sampling variance, which our exact
+  solver eliminates. Source: \texttt{sims/plot\_exact\_vs\_is.R}.}
+  \label{fig:exactis}
+\end{figure}
 
 \paragraph{When does the union help under unknown variance?}
 The union's power gain is largely a \emph{known-variance} phenomenon. A one-sided
@@ -548,7 +564,10 @@ improves on the path by about $16.6$ percentage points. The gain is
 \emph{generally larger for larger $K$}: at $\delta=5$, $q=2$ the union's advantage
 over the path is $0.075/0.115/0.225/0.200$ for $K=2/3/4/5$
 (\texttt{sims/results/sweep\_standard}), a distinctive feature of our exact solver,
-which handles any $K$. Following \citet{chen2023kmeans} we separate
+which handles any $K$. The gain is also robust to cluster geometry: across
+horizontal ($K=2$), equilateral-triangle, and collinear ($K=3$) configurations the
+union dominates the path at every separation (Figure~\ref{fig:geom}).
+Following \citet{chen2023kmeans} we separate
 \emph{detection probability} (whether $k$-means recovers the two true clusters)
 from \emph{conditional power} (rejection given detection); the union gain persists
 conditionally, confirming it is a property of the test, not the clustering
@@ -564,6 +583,15 @@ the studentized test itself, not a union-over-path improvement.
   (solid); the gap is largest in the moderate-signal regime.
   Source: \texttt{sims/plot\_cw\_power.R}.}
   \label{fig:cwpower}
+\end{figure}
+
+\begin{figure}[t]\centering
+  \includegraphics[width=\textwidth]{power_geometries.png}
+  \caption{Union vs.\ path power (known $\sigma$, $95\%$ CI) across cluster
+  geometries: $K=2$ horizontal, $K=3$ equilateral triangle, $K=3$ collinear
+  (Yun--Barber Fig.~4 settings). The union (dashed) is more powerful than the path
+  (solid) in every configuration. Source: \texttt{sims/plot\_power\_geometries.R}.}
+  \label{fig:geom}
 \end{figure}
 
 \subsection{Unknown variance: reproducing the Yun--Barber regime}
