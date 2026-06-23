@@ -99,7 +99,21 @@ easy to see empirically: clustering the Palmer penguins data into $K=3$ groups
 and applying a naive $\chi^2$ test to the three cluster pairs gives $p$-values of
 $3.3\times10^{-57}$, $7.5\times10^{-29}$, and $5.6\times10^{-134}$ (Section~\ref{sec:realdata});
 these are absurd certificates of significance produced \emph{purely} by the act
-of clustering.
+of clustering. The phenomenon is generic: even on pure noise, $k$-means returns
+clusters whose mean differences a naive test declares overwhelmingly significant
+(Figure~\ref{fig:intro}).
+
+\begin{figure}[t]\centering
+  \includegraphics[width=\textwidth]{intro_motivation.png}
+  \caption{The double-dipping problem. \textbf{(a)} One null dataset
+  ($\bmu=\bm 0$); $k$-means with $K=3$ nonetheless returns three clusters
+  (centroids as triangles). \textbf{(b)} QQ-plot of the naive $p$-values for the
+  cluster-mean differences over many such null datasets: they collapse far below
+  the $45^\circ$ line --- grossly anti-conservative. \textbf{(c)} The selective
+  path and union $p$-values are uniform, controlling the selective Type I error.
+  Source: \texttt{sims/plot\_intro\_motivation.R}.}
+  \label{fig:intro}
+\end{figure}
 
 Selective inference repairs this by conditioning on the selection event
 \citep{lee2016exact,fithian2017optimal}. For $k$-means clustering,
@@ -231,6 +245,16 @@ final partition of the two tested clusters; the path test discards all of them
 but the realized one. By \citet{fithian2017optimal}, conditioning on this extra,
 ancillary information can only cost power.
 
+\begin{figure}[t]\centering
+  \includegraphics[width=0.8\textwidth]{decomposition.png}
+  \caption{The contrast plane $(\Fnorm{\Pp_0\X},\Fnorm{\Pp_1\X})$. The
+  known-$\sigma$ tests fix the within-cluster scatter and vary the separation
+  ($\to\chi$); the studentized test (Section~\ref{sec:rfiber}) fixes the total $T$
+  and varies the ratio $R$ ($\to F$).
+  Source: \texttt{sims/plot\_decomposition.R}.}
+  \label{fig:decomposition}
+\end{figure}
+
 % ===========================================================================
 \section{A more powerful test: condition on less}
 \label{sec:union}
@@ -257,7 +281,25 @@ $p_{\mathrm{union}} = \Prob(\phi \ge \norm{\x^\top\bnu}_2 \mid \phi\in\Sset_{\ma
 is based on weaker conditioning. This is exactly the construction
 \citet{chen2023gfl} use for the graph fused lasso, transported to $k$-means:
 condition on the \emph{tested object} (here, the two clusters) instead of the
-\emph{algorithmic trace} (the Lloyd path).
+\emph{algorithmic trace} (the Lloyd path). Figure~\ref{fig:condset} illustrates
+why this buys power: the union set reaches values of $\phi$ \emph{below} the
+observed statistic --- smaller separations at which the same two clusters are
+still recovered --- which the path test discards.
+
+\begin{figure}[t]\centering
+  \includegraphics[width=\textwidth]{conditioning_set.png}
+  \caption{Condition on less $\Rightarrow$ more power, on one dataset
+  ($p_{\mathrm{path}}=0.83$, $p_{\mathrm{union}}=5\times10^{-4}$).
+  \textbf{Top:} the data perturbed along the contrast, $\x'(\phi)$.
+  \textbf{(a)} far below the conditioning set the two tested clusters merge
+  (recoloured); \textbf{(b)} at a smaller separation inside the union set --- but
+  outside the path interval --- they are still recovered; \textbf{(c)} the observed
+  data. \textbf{Bottom:} the set of $\phi$ preserving the two clusters. The path
+  test conditions on the single interval at the observed statistic (dashed); the
+  union test on the whole set, which extends below it. Truncated-$\chi$ null
+  underneath. Source: \texttt{sims/plot\_conditioning\_set.R}.}
+  \label{fig:condset}
+\end{figure}
 
 \subsection{Validity}
 \begin{proposition}\label{prop:union}
@@ -485,6 +527,17 @@ flatlines (Figure~\ref{fig:gencov}); under heavy-tailed $t_5$/$t_{10}$ noise the
 studentized test is fairly robust, with mild anti-conservatism only for the
 heaviest tails (Figure~\ref{fig:heavytail}).
 
+\begin{figure}[t]\centering
+  \includegraphics[width=\textwidth]{cw_typeI.png}
+  \caption{Selective Type I error ($n=90$, $K=3$). QQ-plots of the null
+  $p$-values against Uniform$(0,1)$, faceted by dimension $q$. \textbf{Top:}
+  known-$\sigma$ tests; \textbf{bottom:} studentized tests. The selective path
+  (solid) and union (dashed) lie on the $45^\circ$ line at every $q$, while the
+  naive $p$-value (orange) collapses below it.
+  Source: \texttt{sims/plot\_cw\_typeI.R}.}
+  \label{fig:typeIqq}
+\end{figure}
+
 \subsection{Power: union versus path}
 \label{sec:powersim}
 Figure~\ref{fig:cwpower} plots power against the separation $\delta$, faceted by
@@ -504,6 +557,15 @@ studentized union and path nearly coincide --- the union's leverage is studentiz
 away --- so under unknown $\sigma$ the contribution is the validity and power of
 the studentized test itself, not a union-over-path improvement.
 
+\begin{figure}[t]\centering
+  \includegraphics[width=\textwidth]{cw_power.png}
+  \caption{Power against separation $\delta$ (known $\sigma$, $n=90$, $K=3$, $95\%$
+  CI), faceted by $q$. The union (dashed) is uniformly more powerful than the path
+  (solid); the gap is largest in the moderate-signal regime.
+  Source: \texttt{sims/plot\_cw\_power.R}.}
+  \label{fig:cwpower}
+\end{figure}
+
 \subsection{Unknown variance: reproducing the Yun--Barber regime}
 We reproduce the equilateral-triangle, $K=3$, $q\in\{2,10\}$ design of
 \citet{yun2023unknownvar} in our $k$-means framework (path test, clusters $1$ vs
@@ -520,6 +582,15 @@ $\delta$ and the plug-in power plateaus, whereas the within-cluster scale stays
 near $1$ and the $F$ approaches the oracle. The robust
 $\hat\sigma_{\mathrm{MED}}$ is dimension-dependent: near-oracle at $q=10$ but, with
 three balanced clusters, as inflated as the sample SD at $q=2$.
+
+\begin{figure}[t]\centering
+  \includegraphics[width=0.85\textwidth]{repro_yunbarber.png}
+  \caption{Reproducing the Yun--Barber regime on the same truncation set:
+  oracle $\ge$ studentized $F$ $\ge$ plug-ins. The studentized $F$ beats the
+  sample plug-in once clusters separate, because the global SD absorbs the
+  separation. Source: \texttt{repro\_yunbarber.png}.}
+  \label{fig:yunbarber}
+\end{figure}
 
 \subsection{Comparison with data thinning}
 \label{sec:datathin}
@@ -596,6 +667,15 @@ pair & naive & path (known) & union (known) & studentized $F$ \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]\centering
+  \includegraphics[width=0.85\textwidth]{penguins.png}
+  \caption{Palmer penguins, $K=3$ (Table~\ref{tab:penguins}). Left: the four
+  standardized features in the first two PCs, true species as point shape and
+  $k$-means clusters as colour. Right: the selective $p$-value ($-\log_{10}$) for
+  each cluster pair, by method. Source: \texttt{penguins.png}.}
+  \label{fig:penguins}
+\end{figure}
+
 \subsection{Single-cell RNA sequencing (Pollen)}
 We cluster $216$ developing-cortex cells from \citet{pollen2014lowcoverage}
 (balanced across four inferred cell types; CP10k normalization, log$1$p, top-500
@@ -626,6 +706,13 @@ pair & naive & path (known) & union (known) & studentized $F$ \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]\centering
+  \includegraphics[width=0.85\textwidth]{scrna_k3.png}
+  \caption{Pollen scRNA-seq, $K=3$ (Table~\ref{tab:scrna}): the union rejects all
+  three pairs, the path rejects none. Source: \texttt{scrna\_k3.png}.}
+  \label{fig:scrna}
+\end{figure}
+
 % ===========================================================================
 \section{Discussion}
 \label{sec:discussion}
@@ -652,65 +739,6 @@ and \citet{gao2024hierarchical} cover broader clustering families. Natural next
 steps are control of the family-wise error across all cluster pairs, building on
 \citet{yun2024multiplepairs}, and randomized or data-fission variants that trade
 a little of the conditioning for extra power.
-
-% ===========================================================================
-\section*{Figures}
-% Figures are referenced by filename; PNGs live in ../sims/results/.
-% Compile-time note: each \includegraphics points at a real PNG in the repo.
-% ===========================================================================
-
-\begin{figure}[p]\centering
-  \includegraphics[width=0.85\textwidth]{decomposition.png}
-  \caption{The contrast plane $(\Fnorm{\Pp_0\X},\Fnorm{\Pp_1\X})$. The
-  known-$\sigma$ tests fix the within-cluster scatter and vary the separation
-  ($\to\chi$); the studentized test fixes the total $T$ and varies the
-  ratio $R$ ($\to F$).
-  Source: \texttt{sims/plot\_decomposition.R} $\to$ \texttt{decomposition.png}.}
-  \label{fig:decomposition}
-\end{figure}
-
-\begin{figure}[p]\centering
-  \includegraphics[width=\textwidth]{cw_typeI.png}
-  \caption{Selective Type I error ($n=90$, $K=3$). QQ-plots of the null
-  $p$-values against Uniform$(0,1)$, faceted by dimension $q$. \textbf{Top:}
-  known-$\sigma$ tests; \textbf{bottom:} studentized tests. The selective path
-  (solid) and union (dashed) lie on the $45^\circ$ line at every $q$, while the
-  naive $p$-value (orange) collapses below it. Source:
-  \texttt{sims/plot\_cw\_typeI.R} $\to$ \texttt{cw\_typeI.png}.}
-  \label{fig:typeIqq}
-\end{figure}
-
-\begin{figure}[p]\centering
-  \includegraphics[width=\textwidth]{cw_power.png}
-  \caption{Power against separation $\delta$ (known $\sigma$, $n=90$, $K=3$, $95\%$
-  CI), faceted by $q$. The union (dashed) is uniformly more powerful than the path
-  (solid); the gap is largest in the moderate-signal regime. Source:
-  \texttt{sims/plot\_cw\_power.R} $\to$ \texttt{cw\_power.png}.}
-  \label{fig:cwpower}
-\end{figure}
-
-\begin{figure}[p]\centering
-  \includegraphics[width=0.85\textwidth]{repro_yunbarber.png}
-  \caption{Reproducing the Yun--Barber regime on the same truncation set:
-  oracle $\ge$ studentized $F$ $\ge$ plug-ins. The studentized $F$ beats the
-  sample plug-in once clusters separate, because the global SD absorbs the
-  separation. Source: \texttt{repro\_yunbarber.png}.}
-  \label{fig:yunbarber}
-\end{figure}
-
-\begin{figure}[p]\centering
-  \includegraphics[width=0.85\textwidth]{penguins.png}
-  \caption{Palmer penguins, $K=3$ (Table~\ref{tab:penguins}). Source:
-  \texttt{penguins.png}.}
-  \label{fig:penguins}
-\end{figure}
-
-\begin{figure}[p]\centering
-  \includegraphics[width=0.85\textwidth]{scrna_k3.png}
-  \caption{Pollen scRNA-seq, $K=3$ (Table~\ref{tab:scrna}): the union rejects all
-  three pairs, the path rejects none. Source: \texttt{scrna\_k3.png}.}
-  \label{fig:scrna}
-\end{figure}
 
 % ===========================================================================
 \section*{Supplementary figures}
