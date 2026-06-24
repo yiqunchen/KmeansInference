@@ -769,6 +769,46 @@ steps are control of the family-wise error across all cluster pairs, building on
 a little of the conditioning for extra power.
 
 % ===========================================================================
+\section{The role of AI assistance}
+\label{sec:ai}
+% ===========================================================================
+In the interest of transparency we document the substantial role that large
+language models played in this work. The implementation --- the
+\texttt{KmeansInference} package, the exact $R$-fiber solver, the simulation
+harness, and every figure --- together with the simulation design and validation
+and a first draft of this manuscript, was produced by an agentic coding assistant:
+Anthropic's Claude Opus~4.8, operating through Claude Code, under the author's
+direction. Specific theoretical claims --- most importantly the validity of the
+studentized union on the $R$-fiber --- were independently cross-checked by a
+second model, OpenAI's GPT-5.5, whose responses were pasted back into the
+development loop.
+
+Several of the conceptual steps were AI-assisted. \textbf{(i)} The
+``condition on less'' union construction (Section~\ref{sec:union}) was obtained by
+transporting the graph-fused-lasso argument of \citet{chen2023gfl} to $k$-means,
+together with the observation that the Lloyd-path exploration is purely Euclidean
+and is therefore reused verbatim under a general covariance. \textbf{(ii)} For
+unknown variance, an initial proposal --- re-scaling the known-$\sigma$ truncation
+set into the studentized $F$ --- was found, through exhaustive simulation, to be
+anti-conservative; the assistant then identified the valid construction, forming
+the union in the $F$-statistic's own coordinate (the $R$-fiber,
+Section~\ref{sec:rfiber}), a claim the second model and our simulations both
+confirmed. \textbf{(iii)} The exact $R$-fiber solver rests on recognizing that the
+cluster-assignment margins along the fiber are quartic in $\tan(\theta/2)$, which
+yields the arc boundaries in closed form and turns the $K>2$ $p$-value --- which
+\citet{yun2023unknownvar} estimate by importance sampling --- into an exact,
+zero-variance quantity (Figure~\ref{fig:exactis}). \textbf{(iv)} The
+``studentized-away'' mechanism (Section~\ref{sec:rfiber}) --- that the union's
+power gain is a known-variance phenomenon that nearly vanishes under the
+studentized $F$ --- was diagnosed with targeted simulations.
+
+We emphasize that these were AI-\emph{assisted} insights rather than autonomous
+proofs: each was validated by exhaustive simulation and a unit-tested
+implementation, and the author is responsible for the final mathematics. We make
+this disclosure because the division of labour between human and machine is itself
+informative for how such tools might be used in methodological statistics.
+
+% ===========================================================================
 \section*{Supplementary figures}
 % Detection/conditional-power decomposition, robustness checks (general
 % covariance, heavy tails), and the data-thinning competitor comparison --
